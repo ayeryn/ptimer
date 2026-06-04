@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Posture Timer</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="theme-color" content="#f5f0eb" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════
+     SCREEN: Routine List
+════════════════════════════════════════════════════ -->
+<section id="screen-list" class="screen active">
+  <header class="app-header">
+    <h1 class="app-title">Posture Timer</h1>
+    <div class="header-actions">
+      <button id="btn-history" class="btn-icon" aria-label="History">📋</button>
+      <button id="btn-settings" class="btn-icon" aria-label="Settings">⚙️</button>
+    </div>
+  </header>
+
+  <div id="routine-list" class="routine-list"></div>
+
+  <div class="fab-row">
+    <button id="btn-new-routine" class="btn-fab">+ New Routine</button>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════
+     SCREEN: Active Player
+════════════════════════════════════════════════════ -->
+<section id="screen-player" class="screen">
+  <header class="player-header">
+    <button id="btn-player-back" class="btn-icon" aria-label="Back">←</button>
+    <span id="player-routine-name" class="player-routine-name"></span>
+    <button id="btn-mute" class="btn-icon">Mute</button>
+  </header>
+
+  <div class="global-cue" id="player-global-cue"></div>
+
+  <div class="player-arena">
+    <!-- Countdown ring -->
+    <svg class="progress-ring" viewBox="0 0 200 200" aria-hidden="true">
+      <circle class="ring-track" cx="100" cy="100" r="80" />
+      <circle id="progress-ring-fill" class="ring-fill" cx="100" cy="100" r="80" />
+    </svg>
+
+    <div class="player-center">
+      <div id="player-phase-label" class="phase-label"></div>
+      <div id="player-countdown"   class="countdown"></div>
+      <div id="player-sub-label"   class="sub-label"></div>
+    </div>
+  </div>
+
+  <div id="player-exercise-name" class="exercise-name"></div>
+  <div id="player-exercise-cue"  class="exercise-cue"></div>
+
+  <div class="player-controls">
+    <button id="btn-pause"    class="btn-primary">Pause</button>
+    <button id="btn-end-set"  class="btn-secondary">End Set Early</button>
+    <button id="btn-skip-ex"  class="btn-secondary">Skip Exercise</button>
+    <button id="btn-end-session" class="btn-danger">End Session</button>
+  </div>
+
+  <!-- Done overlay -->
+  <div id="player-done-overlay" class="done-overlay hidden">
+    <div class="done-card">
+      <div class="done-emoji">💪</div>
+      <div class="done-title">Session Complete</div>
+      <div id="player-done-msg" class="done-msg"></div>
+      <button id="btn-done-back" class="btn-primary">Back to Routines</button>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════
+     SCREEN: Routine Editor
+════════════════════════════════════════════════════ -->
+<section id="screen-editor" class="screen">
+  <header class="app-header">
+    <button id="btn-cancel-routine" class="btn-text">Cancel</button>
+    <h2 class="screen-title">Edit Routine</h2>
+    <button id="btn-save-routine" class="btn-text btn-accent">Save</button>
+  </header>
+
+  <div class="form-body">
+    <div class="form-group">
+      <label for="editor-name">Name</label>
+      <input id="editor-name" type="text" placeholder="e.g. Band Strength Block" autocomplete="off" />
+    </div>
+    <div class="form-group">
+      <label for="editor-note">Note (optional)</label>
+      <input id="editor-note" type="text" placeholder="e.g. ~10 min" autocomplete="off" />
+    </div>
+    <div class="form-group">
+      <label for="editor-repeat">Repeat whole routine</label>
+      <input id="editor-repeat" type="number" min="1" max="10" value="1" />
+    </div>
+
+    <h3 class="section-heading">Exercises</h3>
+    <div id="editor-exercise-list" class="editor-ex-list"></div>
+    <button id="btn-add-exercise" class="btn-secondary full-width">+ Add Exercise</button>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════
+     SCREEN: Exercise Editor
+════════════════════════════════════════════════════ -->
+<section id="screen-exercise" class="screen">
+  <header class="app-header">
+    <button id="btn-cancel-exercise" class="btn-text">Cancel</button>
+    <h2 class="screen-title">Edit Exercise</h2>
+    <button id="btn-save-exercise" class="btn-text btn-accent">Save</button>
+  </header>
+
+  <div class="form-body">
+    <div class="form-group">
+      <label for="ex-name">Name</label>
+      <input id="ex-name" type="text" placeholder="e.g. Face Pulls" autocomplete="off" />
+    </div>
+    <div class="form-group">
+      <label for="ex-load">Load (optional)</label>
+      <input id="ex-load" type="text" placeholder="e.g. 15 lb" autocomplete="off" />
+    </div>
+
+    <div class="form-group">
+      <label>Type</label>
+      <div class="radio-row">
+        <label class="radio-label">
+          <input type="radio" name="ex-type" id="ex-type-reps" value="reps" checked />
+          Rep-based (tempo)
+        </label>
+        <label class="radio-label">
+          <input type="radio" name="ex-type" id="ex-type-hold" value="hold" />
+          Timed hold
+        </label>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="ex-sets">Sets</label>
+      <input id="ex-sets" type="number" min="1" max="10" value="3" />
+    </div>
+
+    <!-- Rep fields -->
+    <div id="ex-reps-fields">
+      <div class="form-group">
+        <label>Rep target</label>
+        <div class="range-row">
+          <input id="ex-rep-min" type="number" min="1" max="100" value="12" />
+          <span class="range-sep">–</span>
+          <input id="ex-rep-max" type="number" min="1" max="100" value="15" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Tempo (seconds)</label>
+        <div class="tempo-row">
+          <div class="tempo-field">
+            <span class="tempo-dir">OUT</span>
+            <input id="ex-tempo-out" type="number" min="0.5" max="10" step="0.5" value="2" />
+          </div>
+          <div class="tempo-field">
+            <span class="tempo-dir">HOLD</span>
+            <input id="ex-tempo-hold" type="number" min="0.5" max="10" step="0.5" value="2" />
+          </div>
+          <div class="tempo-field">
+            <span class="tempo-dir">RETURN</span>
+            <input id="ex-tempo-return" type="number" min="0.5" max="10" step="0.5" value="3" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hold fields -->
+    <div id="ex-hold-fields" class="hidden">
+      <div class="form-group">
+        <label for="ex-hold-duration">Hold duration (seconds)</label>
+        <input id="ex-hold-duration" type="number" min="5" max="120" value="20" />
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="ex-rest">Rest between sets (seconds)</label>
+      <input id="ex-rest" type="number" min="5" max="180" value="40" />
+    </div>
+    <div class="form-group">
+      <label for="ex-cue">Exercise cue (optional)</label>
+      <input id="ex-cue" type="text" placeholder="e.g. Stop if form slips" autocomplete="off" />
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════
+     SCREEN: History
+════════════════════════════════════════════════════ -->
+<section id="screen-history" class="screen">
+  <header class="app-header">
+    <button id="btn-history-back" class="btn-text">← Back</button>
+    <h2 class="screen-title">History</h2>
+    <button id="btn-clear-history" class="btn-text btn-danger-text">Clear</button>
+  </header>
+  <div id="history-list" class="history-list"></div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════
+     SCREEN: Settings
+════════════════════════════════════════════════════ -->
+<section id="screen-settings" class="screen">
+  <header class="app-header">
+    <button id="btn-settings-back" class="btn-text">← Back</button>
+    <h2 class="screen-title">Settings</h2>
+    <button id="btn-save-settings" class="btn-text btn-accent">Save</button>
+  </header>
+
+  <div class="form-body">
+    <h3 class="section-heading">Cues</h3>
+    <div class="form-group toggle-row">
+      <label for="setting-voice">Voice</label>
+      <input id="setting-voice" type="checkbox" checked />
+    </div>
+    <div class="form-group toggle-row">
+      <label for="setting-beeps">Beeps</label>
+      <input id="setting-beeps" type="checkbox" checked />
+    </div>
+    <div class="form-group toggle-row">
+      <label for="setting-visual">Visual</label>
+      <input id="setting-visual" type="checkbox" checked />
+    </div>
+    <div class="form-group">
+      <label for="setting-voice-rate">Voice speed</label>
+      <input id="setting-voice-rate" type="range" min="0.5" max="2" step="0.1" value="1.0" />
+    </div>
+
+    <h3 class="section-heading">Global Cue</h3>
+    <div class="form-group">
+      <label for="setting-global-cue">Shown during every session</label>
+      <input id="setting-global-cue" type="text" value="Blades back and down — no shrug." />
+    </div>
+  </div>
+</section>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
