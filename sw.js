@@ -1,20 +1,20 @@
 // Service worker — offline cache for Posture Timer
 
-const CACHE_NAME = 'ptimer-v1';
+const CACHE_NAME = 'ptimer-v2';
 
 const ASSETS = [
-  '/',
-  '/index.html',
-  '/styles.css',
-  '/js/app.js',
-  '/js/storage.js',
-  '/js/presets.js',
-  '/js/schedule.js',
-  '/js/engine.js',
-  '/js/cues.js',
-  '/manifest.webmanifest',
-  '/icons/icon-192.png',
-  '/icons/icon-512.png',
+  './',
+  './index.html',
+  './styles.css',
+  './js/app.js',
+  './js/storage.js',
+  './js/presets.js',
+  './js/schedule.js',
+  './js/engine.js',
+  './js/cues.js',
+  './manifest.webmanifest',
+  './icons/icon-192.png',
+  './icons/icon-512.png',
 ];
 
 // Install: precache all assets

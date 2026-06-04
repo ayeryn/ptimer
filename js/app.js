@@ -563,7 +563,7 @@ function esc(str) {
 // ── Service worker registration ───────────────────────────────────────────────
 
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js').catch(() => {
+  navigator.serviceWorker.register('sw.js').catch(() => {
     // Graceful degradation — app works without SW (localhost / no HTTPS)
   });
 }
