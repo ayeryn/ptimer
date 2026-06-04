@@ -246,6 +246,13 @@ document.getElementById('btn-pause').addEventListener('click', () => {
   }
 });
 
+document.addEventListener('keydown', e => {
+  if (e.code !== 'Space') return;
+  if (!engine || !screens.player.classList.contains('active')) return;
+  e.preventDefault();
+  document.getElementById('btn-pause').click();
+});
+
 document.getElementById('btn-end-set').addEventListener('click', () => engine?.endSetEarly());
 document.getElementById('btn-skip-ex').addEventListener('click', () => engine?.skipExercise());
 
@@ -378,7 +385,14 @@ document.getElementById('btn-cancel-routine').addEventListener('click', () => {
 
 let editingExIdx = null;
 
+function syncEditorFields() {
+  editingRoutine.name   = document.getElementById('editor-name').value.trim() || editingRoutine.name;
+  editingRoutine.note   = document.getElementById('editor-note').value.trim();
+  editingRoutine.repeat = parseInt(document.getElementById('editor-repeat').value) || 1;
+}
+
 function openExerciseEditor(exIdx) {
+  syncEditorFields();
   editingExIdx = exIdx;
   let ex;
   if (exIdx !== null && exIdx < editingRoutine.exercises.length) {

@@ -5,11 +5,12 @@
 
 export class CueEngine {
   constructor(settings) {
-    this._settings    = settings;
-    this._audioCtx    = null;
-    this._unlocked    = false;
-    this._speechQueue = [];
-    this._speaking    = false;
+    this._settings       = settings;
+    this._audioCtx       = null;
+    this._unlocked       = false;
+    this._speechQueue    = [];
+    this._speaking       = false;
+    this._lastSpokenCount = null;
   }
 
   // ── Unlock (call on first user gesture / Start tap) ───────────────────────
@@ -49,6 +50,7 @@ export class CueEngine {
    * Fires voice announcement + a beep.
    */
   onPhaseStart(phase) {
+    this._lastSpokenCount = null;
     const { type, label, exerciseName, setIdx, exerciseIdx } = phase;
 
     switch (type) {
@@ -144,14 +146,13 @@ export class CueEngine {
     window.speechSynthesis.speak(u);
   }
 
-  // Countdown words (separate queue slot so they don't interrupt mid-word)
+  // Countdown words — fire once per integer value per phase
   _speakCount(n) {
+    if (n === this._lastSpokenCount) return;
+    this._lastSpokenCount = n;
     const words = ['', 'one', 'two', 'three', 'four', 'five'];
     const word  = words[n] ?? String(n);
-    // Only enqueue if not already queued (avoid duplicates from fast ticks)
-    if (!this._speechQueue.includes(word)) {
-      this._speak(word);
-    }
+    this._speak(word);
   }
 
   // ── Web Audio beeps ───────────────────────────────────────────────────────
