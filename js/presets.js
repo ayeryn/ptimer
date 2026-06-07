@@ -148,4 +148,33 @@ export const PRESET_ROUTINES = [
       },
     ],
   },
+  {
+    id: 'preset-pallof-press',
+    name: 'Pallof Press',
+    note: 'Anti-rotation • light band • per side',
+    repeat: 1,
+    exercises: [
+      {
+        id: 'ex-pallof-press',
+        name: 'Pallof Press',
+        type: 'reps',
+        load: '10 lb',
+        sets: 3,
+        repTarget: [8, 12],
+        tempo: { out: 2, hold: 3, return: 3 },
+        rest: 40,
+        cue: 'Anchor chest height, side-on. Press straight out, resist the pull into rotation. Ribs down, breathe out on the press, don\'t arch. Both sides.',
+      },
+      {
+        id: 'ex-pallof-iso',
+        name: 'Pallof Iso-Hold',
+        type: 'hold',
+        load: '10 lb',
+        sets: 3,
+        holdDuration: 25,
+        rest: 30,
+        cue: 'Arms extended, hold against rotation. Pure stabilizer endurance. Both sides.',
+      },
+    ],
+  },
 ];
