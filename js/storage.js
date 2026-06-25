@@ -18,6 +18,7 @@ const DEFAULT_SETTINGS = {
   visual:    true,
   globalCue: 'Blades back and down — no shrug.',
   voiceRate: 1.0,
+  theme:     'auto',   // 'auto' | 'light' | 'dark'
 };
 
 // ── Helpers ─────────────────────────────────────────────────────────────────

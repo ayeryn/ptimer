@@ -26,9 +26,89 @@
   --shadow:  0 2px 12px rgba(0,0,0,0.08);
   --font:    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 
+  /* Translucent layers */
+  --player-header-bg: rgba(255,255,255,0.85);
+  --overlay-bg:       rgba(245,240,235,0.96);
+
+  /* Player phase background tints */
+  --tint-out:       #e8f0f7;
+  --tint-hold:      #ede8f5;
+  --tint-return:    #e8f5ef;
+  --tint-rest:      #fdf3e3;
+  --tint-get-ready: #f0ece8;
+  --tint-done:      #e8f5ef;
+
   /* Safe area insets for notched iPhones */
   --safe-top:    env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* ── Dark theme ────────────────────────────────────────────────────────────── */
+/* Applied when user forces dark, or when "auto" + system prefers dark.
+   Keep the two blocks below in sync. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  /* Slate Calm */
+  --bg:         #171B21;
+  --surface:    #1F262E;
+  --border:     #333E49;
+  --text:       #E6ECF2;
+  --text-muted: #AFC0CE;  /* cool blue-grey, ~8:1 */
+  --accent:     #69A8CF;
+  --accent-2:   #7FB4D6;
+  --danger:     #ef5350;
+
+  --phase-out:       #69A8CF;
+  --phase-hold:      #a98fd0;
+  --phase-return:    #5cb784;
+  --phase-rest:      #d9a94a;
+  --phase-get-ready: #AFC0CE;
+  --phase-done:      #5cb784;
+
+  --shadow: 0 2px 12px rgba(0,0,0,0.45);
+
+  --player-header-bg: rgba(31,38,46,0.85);
+  --overlay-bg:       rgba(23,27,33,0.96);
+
+  --tint-out:       #16242e;
+  --tint-hold:      #221c2e;
+  --tint-return:    #142a20;
+  --tint-rest:      #2a2113;
+  --tint-get-ready: #1c232b;
+  --tint-done:      #142a20;
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="auto"] {
+    color-scheme: dark;
+    /* Slate Calm */
+    --bg:         #171B21;
+    --surface:    #1F262E;
+    --border:     #333E49;
+    --text:       #E6ECF2;
+    --text-muted: #AFC0CE;  /* cool blue-grey, ~8:1 */
+    --accent:     #69A8CF;
+    --accent-2:   #7FB4D6;
+    --danger:     #ef5350;
+
+    --phase-out:       #69A8CF;
+    --phase-hold:      #a98fd0;
+    --phase-return:    #5cb784;
+    --phase-rest:      #d9a94a;
+    --phase-get-ready: #AFC0CE;
+    --phase-done:      #5cb784;
+
+    --shadow: 0 2px 12px rgba(0,0,0,0.45);
+
+    --player-header-bg: rgba(31,38,46,0.85);
+    --overlay-bg:       rgba(23,27,33,0.96);
+
+    --tint-out:       #16242e;
+    --tint-hold:      #221c2e;
+    --tint-return:    #142a20;
+    --tint-rest:      #2a2113;
+    --tint-get-ready: #1c232b;
+    --tint-done:      #142a20;
+  }
 }
 
 html { font-size: 18px; -webkit-text-size-adjust: 100%; }
@@ -150,6 +230,10 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
 .card-main { flex: 1; min-width: 0; }
 .card-name { display: block; font-size: 1.1rem; font-weight: 600; }
 .card-meta { display: block; font-size: 0.85rem; color: var(--text-muted); margin-top: 0.2rem; }
+:root[data-theme="dark"] .card-name { color: var(--text-muted); }
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="auto"] .card-name { color: var(--text-muted); }
+}
 .card-actions { display: flex; gap: 0.5rem; flex-shrink: 0; }
 .btn-start {
   background: var(--accent);
@@ -181,13 +265,13 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
 }
 
 /* Phase-specific backgrounds */
-.phase-rep-out     { --player-bg: #e8f0f7; }
-.phase-rep-hold    { --player-bg: #ede8f5; }
-.phase-rep-return  { --player-bg: #e8f5ef; }
-.phase-rest        { --player-bg: #fdf3e3; }
-.phase-get-ready   { --player-bg: #f0ece8; }
-.phase-hold        { --player-bg: #ede8f5; }
-.phase-done        { --player-bg: #e8f5ef; }
+.phase-rep-out     { --player-bg: var(--tint-out); }
+.phase-rep-hold    { --player-bg: var(--tint-hold); }
+.phase-rep-return  { --player-bg: var(--tint-return); }
+.phase-rest        { --player-bg: var(--tint-rest); }
+.phase-get-ready   { --player-bg: var(--tint-get-ready); }
+.phase-hold        { --player-bg: var(--tint-hold); }
+.phase-done        { --player-bg: var(--tint-done); }
 
 #screen-player.phase-rep-out    { background: var(--player-bg, var(--bg)); }
 #screen-player.phase-rep-hold   { background: var(--player-bg, var(--bg)); }
@@ -201,7 +285,7 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
   align-items: center;
   justify-content: space-between;
   padding: 0.75rem 1.25rem;
-  background: rgba(255,255,255,0.85);
+  background: var(--player-header-bg);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--border);
@@ -317,7 +401,7 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
 /* ── Done overlay ──────────────────────────────────────────────────────────── */
 .done-overlay {
   position: fixed; inset: 0;
-  background: rgba(245, 240, 235, 0.96);
+  background: var(--overlay-bg);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -339,7 +423,8 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
 
 input[type="text"],
 input[type="number"],
-input[type="range"] {
+input[type="range"],
+select {
   font-family: var(--font);
   font-size: 1rem;
   padding: 0.75rem 0.9rem;
@@ -349,6 +434,7 @@ input[type="range"] {
   color: var(--text);
   width: 100%;
 }
+.toggle-row select { width: auto; }
 input[type="text"]:focus,
 input[type="number"]:focus {
   outline: none;

@@ -16,6 +16,38 @@ let cueEngine  = new CueEngine(settings);
 let engine     = null;   // active SessionEngine
 let wakeLock   = null;
 
+// ── Theme ───────────────────────────────────────────────────────────────────
+const THEME_COLORS = { light: '#f5f0eb', dark: '#171B21' };
+const darkMQ = window.matchMedia('(prefers-color-scheme: dark)');
+
+function resolveTheme(theme) {
+  if (theme === 'light' || theme === 'dark') return theme;
+  return darkMQ.matches ? 'dark' : 'light';
+}
+
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  const resolved = resolveTheme(theme);
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute('content', THEME_COLORS[resolved]);
+  const btn = document.getElementById('btn-theme');
+  if (btn) btn.textContent = resolved === 'dark' ? '☀️' : '🌙';
+}
+
+// Header quick-toggle: flip to the opposite of what's showing now.
+document.getElementById('btn-theme').addEventListener('click', () => {
+  settings.theme = resolveTheme(settings.theme ?? 'auto') === 'dark' ? 'light' : 'dark';
+  saveSettings(settings);
+  applyTheme(settings.theme);
+});
+
+// Re-sync the status-bar color when the system flips and we're following it.
+darkMQ.addEventListener('change', () => {
+  if ((settings.theme ?? 'auto') === 'auto') applyTheme('auto');
+});
+
+applyTheme(settings.theme ?? 'auto');
+
 // ── Screen router ─────────────────────────────────────────────────────────────
 
 const screens = {
@@ -534,6 +566,7 @@ function renderSettings() {
   document.getElementById('setting-visual').checked   = settings.visual;
   document.getElementById('setting-global-cue').value = settings.globalCue;
   document.getElementById('setting-voice-rate').value = settings.voiceRate ?? 1.0;
+  document.getElementById('setting-theme').value      = settings.theme ?? 'auto';
 }
 
 document.getElementById('btn-save-settings').addEventListener('click', () => {
@@ -542,8 +575,10 @@ document.getElementById('btn-save-settings').addEventListener('click', () => {
   settings.visual    = document.getElementById('setting-visual').checked;
   settings.globalCue = document.getElementById('setting-global-cue').value.trim() || 'Blades back and down — no shrug.';
   settings.voiceRate = parseFloat(document.getElementById('setting-voice-rate').value) || 1.0;
+  settings.theme     = document.getElementById('setting-theme').value || 'auto';
   saveSettings(settings);
   cueEngine.updateSettings(settings);
+  applyTheme(settings.theme);
   showScreen('list');
   renderList();
 });
