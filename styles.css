@@ -262,6 +262,24 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
 #screen-player {
   background: var(--bg);
   transition: background 0.3s;
+  position: relative;
+}
+
+.player-elapsed {
+  position: absolute;
+  top: calc(var(--safe-top) + 3.25rem);
+  right: 1rem;
+  z-index: 11;
+  font-variant-numeric: tabular-nums;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  padding: 0.2rem 0.55rem;
+  border-radius: 0.5rem;
+  background: var(--player-header-bg);
+  border: 1px solid var(--border);
+  color: var(--text, inherit);
+  pointer-events: none;
 }
 
 /* Phase-specific backgrounds */

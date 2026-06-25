@@ -16,6 +16,10 @@ let cueEngine  = new CueEngine(settings);
 let engine     = null;   // active SessionEngine
 let wakeLock   = null;
 
+// Total-workout countup (excludes the get-ready countdown)
+let workoutStartMs = null;   // performance.now() when first real phase began
+let workoutPauseMs = null;   // performance.now() when paused, else null
+
 // ── Theme ───────────────────────────────────────────────────────────────────
 const THEME_COLORS = { light: '#f5f0eb', dark: '#171B21' };
 const darkMQ = window.matchMedia('(prefers-color-scheme: dark)');
@@ -163,10 +167,12 @@ async function startSession(routineId) {
     onPhaseStart: (phase, idx) => {
       cueEngine.onPhaseStart(phase);
       renderPhase(phase, idx);
+      startWorkoutClock(phase);
     },
     onTick: (remaining, phase, idx) => {
       cueEngine.onTick(remaining, phase);
       updateCountdown(remaining, phase);
+      updateWorkoutClock();
     },
     onDone: (stats) => {
       logSession(routine, stats);
@@ -210,6 +216,7 @@ function resetPlayerUI() {
   document.getElementById('player-exercise-cue').textContent  = '';
   document.getElementById('player-countdown').textContent     = '';
   setRingProgress(0);
+  resetWorkoutClock();
   hideDoneOverlay();
 }
 
@@ -254,6 +261,35 @@ function setRingProgress(pct) {
   ring.style.strokeDashoffset = offset;
 }
 
+// ── Total workout countup ─────────────────────────────────────────────────────
+
+function resetWorkoutClock() {
+  workoutStartMs = null;
+  workoutPauseMs = null;
+  const el = document.getElementById('player-elapsed');
+  if (!el) return;
+  el.textContent = '0:00';
+  el.classList.add('hidden');
+}
+
+function startWorkoutClock(phase) {
+  // Skip the pre-routine countdown; clock starts at the first real phase.
+  if (workoutStartMs !== null || phase.type === 'get-ready') return;
+  workoutStartMs = performance.now();
+  document.getElementById('player-elapsed')?.classList.remove('hidden');
+  updateWorkoutClock();
+}
+
+function updateWorkoutClock() {
+  if (workoutStartMs === null) return;
+  const el = document.getElementById('player-elapsed');
+  if (!el) return;
+  const secs = Math.floor((performance.now() - workoutStartMs) / 1000);
+  const m = Math.floor(secs / 60);
+  const s = secs % 60;
+  el.textContent = `${m}:${String(s).padStart(2, '0')}`;
+}
+
 function showDoneOverlay(stats) {
   const overlay = document.getElementById('player-done-overlay');
   if (overlay) overlay.classList.remove('hidden');
@@ -271,9 +307,15 @@ document.getElementById('btn-pause').addEventListener('click', () => {
   if (!engine) return;
   if (engine.isPaused) {
     engine.resume();
+    // Shift start forward by the paused span so it isn't counted
+    if (workoutStartMs !== null && workoutPauseMs !== null) {
+      workoutStartMs += performance.now() - workoutPauseMs;
+    }
+    workoutPauseMs = null;
     document.getElementById('btn-pause').textContent = 'Pause';
   } else {
     engine.pause();
+    workoutPauseMs = performance.now();
     document.getElementById('btn-pause').textContent = 'Resume';
   }
 });
