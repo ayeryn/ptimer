@@ -37,6 +37,7 @@
 
   <div class="fab-row">
     <button id="btn-new-routine" class="btn-fab">+ New Routine</button>
+    <button id="btn-new-group" class="btn-fab btn-fab-secondary">+ New Group</button>
   </div>
 </section>
 
@@ -111,6 +112,12 @@
     <div class="form-group">
       <label for="editor-repeat">Repeat whole routine</label>
       <input id="editor-repeat" type="number" min="1" max="10" value="1" />
+    </div>
+    <div class="form-group">
+      <label for="editor-group">Group</label>
+      <select id="editor-group">
+        <option value="">No Group</option>
+      </select>
     </div>
 
     <h3 class="section-heading">Exercises</h3>

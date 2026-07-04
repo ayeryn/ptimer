@@ -253,7 +253,119 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
 .fab-row {
   display: flex;
   justify-content: center;
+  gap: 0.75rem;
   padding: 1rem 1.25rem 0;
+}
+.btn-fab-secondary {
+  background: var(--surface);
+  color: var(--accent-2);
+  border: 1.5px solid var(--accent-2);
+  box-shadow: var(--shadow);
+}
+
+/* ── Routine groups ───────────────────────────────────────────────────────── */
+.routine-group {
+  display: flex;
+  flex-direction: column;
+}
+.group-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  border-left: 3px solid var(--accent-2);
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.group-chevron {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  width: 1rem;
+  text-align: center;
+  flex-shrink: 0;
+  transition: transform 0.2s;
+}
+.group-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+  flex: 1;
+  min-width: 0;
+}
+.group-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  padding: 0.1rem 0.5rem;
+  flex-shrink: 0;
+}
+.group-actions {
+  display: flex;
+  gap: 0.25rem;
+  flex-shrink: 0;
+}
+.group-actions button {
+  font-size: 0.9rem;
+  padding: 0.2rem 0.4rem;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+}
+.group-content {
+  overflow: hidden;
+  transition: max-height 0.3s ease, opacity 0.3s ease;
+  max-height: 2000px;
+  opacity: 1;
+  padding-left: 1rem;
+}
+.group-content.collapsed {
+  max-height: 0;
+  opacity: 0;
+}
+
+/* ── Drag handle + reorder buttons ────────────────────────────────────────── */
+.drag-handle {
+  cursor: grab;
+  font-size: 1.1rem;
+  color: var(--text-muted);
+  padding: 0.2rem 0.1rem;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  flex-shrink: 0;
+  line-height: 1;
+}
+.drag-handle:active { cursor: grabbing; }
+.btn-rtn-up, .btn-rtn-down {
+  font-size: 1rem;
+  color: var(--text-muted);
+  padding: 0.2rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+.btn-rtn-up:disabled, .btn-rtn-down:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+/* Drag states */
+.routine-card.dragging {
+  opacity: 0.4;
+  transform: scale(0.97);
+}
+.routine-card.drag-over {
+  border-color: var(--accent-2);
+  box-shadow: 0 0 0 2px var(--accent-2);
+}
+.drag-placeholder {
+  border: 2px dashed var(--accent-2);
+  border-radius: var(--radius);
+  min-height: 60px;
+  background: transparent;
+  opacity: 0.5;
 }
 
 .empty { color: var(--text-muted); text-align: center; padding: 2rem 0; font-size: 1rem; }

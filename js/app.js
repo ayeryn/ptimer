@@ -1,6 +1,7 @@
 // app.js — State, rendering, screen wiring, wake lock, session logging.
 
-import { seedIfNeeded, getRoutines, saveRoutine, deleteRoutine,
+import { seedIfNeeded, getRoutines, saveRoutine, saveRoutines, deleteRoutine,
+         getGroups, saveGroups, saveGroup, deleteGroup,
          getSettings, saveSettings, addSession, getHistory,
          clearHistory, newId } from './storage.js';
 import { buildSchedule } from './schedule.js';
@@ -73,32 +74,77 @@ function showScreen(name) {
 
 function renderList() {
   const routines   = getRoutines();
+  const groups     = getGroups();
   const container  = document.getElementById('routine-list');
   container.innerHTML = '';
 
-  if (routines.length === 0) {
+  if (routines.length === 0 && groups.length === 0) {
     container.innerHTML = '<p class="empty">No routines yet. Tap + to create one.</p>';
     return;
   }
 
-  routines.forEach(r => {
-    const card = document.createElement('div');
-    card.className = 'routine-card';
+  // Ungrouped routines first
+  const ungrouped = routines.filter(r => !r.groupId);
+  ungrouped.forEach((r, i) => {
+    container.appendChild(buildRoutineCard(r, i, ungrouped.length));
+  });
 
-    const est = estimateDuration(r);
-    card.innerHTML = `
-      <div class="card-main">
-        <span class="card-name">${esc(r.name)}</span>
-        <span class="card-meta">${esc(r.note ?? '')} · ${est}</span>
-      </div>
-      <div class="card-actions">
-        <button class="btn-start" data-id="${r.id}">Start</button>
-        <button class="btn-edit" data-id="${r.id}" aria-label="Edit ${esc(r.name)}">✏️</button>
-        <button class="btn-delete" data-id="${r.id}" aria-label="Delete ${esc(r.name)}">🗑</button>
+  // Each group
+  groups.forEach(group => {
+    const members = routines.filter(r => r.groupId === group.id);
+    const section = document.createElement('div');
+    section.className = 'routine-group';
+    section.dataset.groupId = group.id;
+
+    const header = document.createElement('div');
+    header.className = 'group-header';
+    header.innerHTML = `
+      <span class="group-chevron">${group.collapsed ? '▸' : '▾'}</span>
+      <span class="group-name">${esc(group.name)}</span>
+      <span class="group-badge">${members.length} routine${members.length !== 1 ? 's' : ''}</span>
+      <div class="group-actions">
+        <button class="btn-group-edit" data-group-id="${group.id}" aria-label="Rename group">✏️</button>
+        <button class="btn-group-delete" data-group-id="${group.id}" aria-label="Delete group">🗑</button>
       </div>
     `;
-    container.appendChild(card);
+    section.appendChild(header);
+
+    const content = document.createElement('div');
+    content.className = 'group-content' + (group.collapsed ? ' collapsed' : '');
+    members.forEach((r, i) => {
+      content.appendChild(buildRoutineCard(r, i, members.length));
+    });
+    section.appendChild(content);
+
+    container.appendChild(section);
   });
+
+  // Wire drag-and-drop after render
+  initDragAndDrop(container);
+}
+
+function buildRoutineCard(r, indexInSection, sectionLen) {
+  const card = document.createElement('div');
+  card.className = 'routine-card';
+  card.dataset.id = r.id;
+  card.setAttribute('draggable', 'true');
+
+  const est = estimateDuration(r);
+  card.innerHTML = `
+    <span class="drag-handle" aria-label="Drag to reorder">⠿</span>
+    <div class="card-main">
+      <span class="card-name">${esc(r.name)}</span>
+      <span class="card-meta">${esc(r.note ?? '')} · ${est}</span>
+    </div>
+    <div class="card-actions">
+      <button class="btn-rtn-up" data-id="${r.id}" ${indexInSection === 0 ? 'disabled' : ''} aria-label="Move up">↑</button>
+      <button class="btn-rtn-down" data-id="${r.id}" ${indexInSection === sectionLen - 1 ? 'disabled' : ''} aria-label="Move down">↓</button>
+      <button class="btn-start" data-id="${r.id}">Start</button>
+      <button class="btn-edit" data-id="${r.id}" aria-label="Edit ${esc(r.name)}">✏️</button>
+      <button class="btn-delete" data-id="${r.id}" aria-label="Delete ${esc(r.name)}">🗑</button>
+    </div>
+  `;
+  return card;
 }
 
 function estimateDuration(routine) {
@@ -118,20 +164,222 @@ function estimateDuration(routine) {
   return `~${Math.round(secs / 60)} min`;
 }
 
+// ── Drag-and-drop (mouse + touch) ─────────────────────────────────────────────
+
+function initDragAndDrop(container) {
+  const cards = container.querySelectorAll('.routine-card');
+
+  // --- HTML5 Drag API (mouse / desktop) ---
+  cards.forEach(card => {
+    card.addEventListener('dragstart', e => {
+      card.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', card.dataset.id);
+    });
+    card.addEventListener('dragend', () => {
+      card.classList.remove('dragging');
+      container.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+    });
+    card.addEventListener('dragover', e => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      card.classList.add('drag-over');
+    });
+    card.addEventListener('dragleave', () => card.classList.remove('drag-over'));
+    card.addEventListener('drop', e => {
+      e.preventDefault();
+      card.classList.remove('drag-over');
+      const draggedId = e.dataTransfer.getData('text/plain');
+      const targetId  = card.dataset.id;
+      if (draggedId && draggedId !== targetId) {
+        dropReorder(draggedId, targetId);
+      }
+    });
+  });
+
+  // --- Touch drag (mobile) ---
+  let touchState = null;
+
+  cards.forEach(card => {
+    const handle = card.querySelector('.drag-handle');
+    if (!handle) return;
+
+    handle.addEventListener('touchstart', e => {
+      if (e.touches.length !== 1) return;
+      const touch = e.touches[0];
+      touchState = {
+        id: card.dataset.id,
+        startX: touch.clientX,
+        startY: touch.clientY,
+        timer: setTimeout(() => {
+          if (touchState) {
+            touchState.active = true;
+            card.classList.add('dragging');
+          }
+        }, 300),
+        active: false,
+      };
+    }, { passive: true });
+
+    handle.addEventListener('touchmove', e => {
+      if (!touchState) return;
+      if (!touchState.active) {
+        // Check if user is scrolling — cancel if moved too far before long-press fires
+        const touch = e.touches[0];
+        const dx = Math.abs(touch.clientX - touchState.startX);
+        const dy = Math.abs(touch.clientY - touchState.startY);
+        if (dx > 10 || dy > 10) {
+          clearTimeout(touchState.timer);
+          touchState = null;
+        }
+        return;
+      }
+      e.preventDefault();
+      const touch = e.touches[0];
+      const target = document.elementFromPoint(touch.clientX, touch.clientY);
+      const targetCard = target?.closest('.routine-card');
+      container.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+      if (targetCard && targetCard.dataset.id !== touchState.id) {
+        targetCard.classList.add('drag-over');
+      }
+    }, { passive: false });
+
+    handle.addEventListener('touchend', () => {
+      if (!touchState) return;
+      clearTimeout(touchState.timer);
+      if (touchState.active) {
+        const overEl = container.querySelector('.drag-over');
+        if (overEl) {
+          dropReorder(touchState.id, overEl.dataset.id);
+          overEl.classList.remove('drag-over');
+        }
+        card.classList.remove('dragging');
+      }
+      touchState = null;
+    }, { passive: true });
+
+    handle.addEventListener('touchcancel', () => {
+      if (!touchState) return;
+      clearTimeout(touchState.timer);
+      card.classList.remove('dragging');
+      container.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+      touchState = null;
+    }, { passive: true });
+  });
+}
+
+/** Move dragged routine to the position of the target routine and update groupId */
+function dropReorder(draggedId, targetId) {
+  const routines = getRoutines();
+  const dragIdx  = routines.findIndex(r => r.id === draggedId);
+  const targIdx  = routines.findIndex(r => r.id === targetId);
+  if (dragIdx < 0 || targIdx < 0) return;
+
+  // Adopt target's groupId so cross-group drag works
+  routines[dragIdx].groupId = routines[targIdx].groupId || null;
+
+  // Move within array
+  const [moved] = routines.splice(dragIdx, 1);
+  const newTargIdx = routines.findIndex(r => r.id === targetId);
+  routines.splice(newTargIdx, 0, moved);
+
+  saveRoutines(routines);
+  renderList();
+}
+
+// ── Routine list up/down reorder ──────────────────────────────────────────────
+
+function moveRoutine(routineId, direction) {
+  const routines = getRoutines();
+  const routine  = routines.find(r => r.id === routineId);
+  if (!routine) return;
+
+  // Get siblings (same group)
+  const groupId  = routine.groupId || null;
+  const siblings = routines.filter(r => (r.groupId || null) === groupId);
+  const posInSib = siblings.findIndex(r => r.id === routineId);
+  if (posInSib < 0) return;
+  if (direction === -1 && posInSib === 0) return;
+  if (direction === 1  && posInSib === siblings.length - 1) return;
+
+  const swapTarget = siblings[posInSib + direction];
+  const globalA = routines.indexOf(routine);
+  const globalB = routines.indexOf(swapTarget);
+  [routines[globalA], routines[globalB]] = [routines[globalB], routines[globalA]];
+
+  saveRoutines(routines);
+  renderList();
+}
+
+// ── Group management ──────────────────────────────────────────────────────────
+
+document.getElementById('btn-new-group').addEventListener('click', () => {
+  const name = prompt('Group name:');
+  if (!name || !name.trim()) return;
+  saveGroup({ id: newId('grp'), name: name.trim(), collapsed: false });
+  renderList();
+});
+
+// ── Routine list event delegation ─────────────────────────────────────────────
+
 document.getElementById('routine-list').addEventListener('click', e => {
   const btn = e.target.closest('button');
-  if (!btn) return;
+  if (!btn) {
+    // Clicking group header (non-button area) toggles collapse
+    const header = e.target.closest('.group-header');
+    if (header) {
+      const section = header.closest('.routine-group');
+      const groupId = section?.dataset.groupId;
+      if (groupId) toggleGroupCollapse(groupId);
+    }
+    return;
+  }
+
   const id = btn.dataset.id;
 
-  if (btn.classList.contains('btn-start')) startSession(id);
-  if (btn.classList.contains('btn-edit'))  openEditor(id);
+  if (btn.classList.contains('btn-start'))  startSession(id);
+  if (btn.classList.contains('btn-edit'))   openEditor(id);
   if (btn.classList.contains('btn-delete')) {
     if (confirm('Delete this routine?')) {
       deleteRoutine(id);
       renderList();
     }
   }
+  if (btn.classList.contains('btn-rtn-up'))   moveRoutine(id, -1);
+  if (btn.classList.contains('btn-rtn-down')) moveRoutine(id, 1);
+
+  // Group actions
+  const groupId = btn.dataset.groupId;
+  if (btn.classList.contains('btn-group-edit')) {
+    const groups = getGroups();
+    const group  = groups.find(g => g.id === groupId);
+    if (!group) return;
+    const name = prompt('Rename group:', group.name);
+    if (name && name.trim()) {
+      group.name = name.trim();
+      saveGroups(groups);
+      renderList();
+    }
+  }
+  if (btn.classList.contains('btn-group-delete')) {
+    if (!confirm('Delete this group? Routines will be moved to ungrouped.')) return;
+    // Ungroup routines
+    const routines = getRoutines();
+    routines.forEach(r => { if (r.groupId === groupId) r.groupId = null; });
+    saveRoutines(routines);
+    deleteGroup(groupId);
+    renderList();
+  }
 });
+
+function toggleGroupCollapse(groupId) {
+  const groups = getGroups();
+  const group  = groups.find(g => g.id === groupId);
+  if (!group) return;
+  group.collapsed = !group.collapsed;
+  saveGroups(groups);
+  renderList();
+}
 
 document.getElementById('btn-new-routine').addEventListener('click', () => openEditor(null));
 document.getElementById('btn-history').addEventListener('click', () => { renderHistory(); showScreen('history'); });
@@ -388,6 +636,7 @@ function openEditor(routineId) {
       name:     '',
       note:     '',
       repeat:   1,
+      groupId:  null,
       exercises: [],
     };
   }
@@ -399,6 +648,18 @@ function renderEditor() {
   document.getElementById('editor-name').value    = editingRoutine.name;
   document.getElementById('editor-note').value    = editingRoutine.note ?? '';
   document.getElementById('editor-repeat').value  = editingRoutine.repeat ?? 1;
+
+  // Populate group dropdown
+  const groupSelect = document.getElementById('editor-group');
+  const groups = getGroups();
+  groupSelect.innerHTML = '<option value="">No Group</option>';
+  groups.forEach(g => {
+    const opt = document.createElement('option');
+    opt.value = g.id;
+    opt.textContent = g.name;
+    if (editingRoutine.groupId === g.id) opt.selected = true;
+    groupSelect.appendChild(opt);
+  });
 
   const list = document.getElementById('editor-exercise-list');
   list.innerHTML = '';
@@ -445,6 +706,7 @@ document.getElementById('btn-save-routine').addEventListener('click', () => {
   editingRoutine.name   = document.getElementById('editor-name').value.trim() || 'Untitled';
   editingRoutine.note   = document.getElementById('editor-note').value.trim();
   editingRoutine.repeat = parseInt(document.getElementById('editor-repeat').value) || 1;
+  editingRoutine.groupId = document.getElementById('editor-group').value || null;
   saveRoutine(editingRoutine);
   showScreen('list');
   renderList();
@@ -463,6 +725,7 @@ function syncEditorFields() {
   editingRoutine.name   = document.getElementById('editor-name').value.trim() || editingRoutine.name;
   editingRoutine.note   = document.getElementById('editor-note').value.trim();
   editingRoutine.repeat = parseInt(document.getElementById('editor-repeat').value) || 1;
+  editingRoutine.groupId = document.getElementById('editor-group').value || null;
 }
 
 function openExerciseEditor(exIdx) {

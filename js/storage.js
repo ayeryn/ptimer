@@ -8,6 +8,7 @@ const KEYS = {
   history:  'ptimer_history',
   settings: 'ptimer_settings',
   seeded:   'ptimer_seeded',
+  groups:   'ptimer_groups',
 };
 
 // ── Defaults ────────────────────────────────────────────────────────────────
@@ -71,6 +72,31 @@ export function saveRoutine(routine) {
 
 export function deleteRoutine(id) {
   saveRoutines(getRoutines().filter(r => r.id !== id));
+}
+
+// ── Groups ───────────────────────────────────────────────────────────────────
+
+export function getGroups() {
+  return read(KEYS.groups, []);
+}
+
+export function saveGroups(groups) {
+  write(KEYS.groups, groups);
+}
+
+export function saveGroup(group) {
+  const groups = getGroups();
+  const idx = groups.findIndex(g => g.id === group.id);
+  if (idx >= 0) {
+    groups[idx] = group;
+  } else {
+    groups.push(group);
+  }
+  saveGroups(groups);
+}
+
+export function deleteGroup(id) {
+  saveGroups(getGroups().filter(g => g.id !== id));
 }
 
 // ── History ──────────────────────────────────────────────────────────────────
