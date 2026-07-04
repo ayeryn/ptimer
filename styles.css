@@ -224,17 +224,18 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
   padding: 1rem;
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.5rem 0.75rem;
+  flex-wrap: wrap;
   box-shadow: var(--shadow);
 }
-.card-main { flex: 1; min-width: 0; }
+.card-main { flex: 1 1 0; min-width: calc(100% - 2.5rem); }
 .card-name { display: block; font-size: 1.1rem; font-weight: 600; }
 .card-meta { display: block; font-size: 0.85rem; color: var(--text-muted); margin-top: 0.2rem; }
 :root[data-theme="dark"] .card-name { color: var(--text-muted); }
 @media (prefers-color-scheme: dark) {
   :root[data-theme="auto"] .card-name { color: var(--text-muted); }
 }
-.card-actions { display: flex; gap: 0.5rem; flex-shrink: 0; }
+.card-actions { display: flex; gap: 0.5rem; flex-shrink: 0; margin-left: auto; align-items: center; }
 .btn-start {
   background: var(--accent);
   color: #fff;
