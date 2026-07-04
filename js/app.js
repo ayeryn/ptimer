@@ -117,7 +117,6 @@ function renderGroup(group, indexInGroups, sectionLen, routines, container) {
     <div class="group-header-info">
       <span class="group-chevron">${group.collapsed ? '▸' : '▾'}</span>
       <span class="group-name">${esc(group.name)}</span>
-      <span class="group-badge">${members.length} routine${members.length !== 1 ? 's' : ''}</span>
     </div>
     <div class="group-actions">
       <button class="btn-group-up" data-group-id="${group.id}" ${indexInGroups === 0 ? 'disabled' : ''} aria-label="Move group up">↑</button>
