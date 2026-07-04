@@ -315,6 +315,18 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
   border-radius: var(--radius-sm);
   color: var(--text-muted);
 }
+.btn-group-pin {
+  opacity: 0.35;
+  filter: grayscale(100%);
+  transition: opacity 0.2s, filter 0.2s;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+.btn-group-pin.pinned {
+  opacity: 1;
+  filter: none;
+}
 .group-content {
   overflow: hidden;
   transition: max-height 0.3s ease, opacity 0.3s ease;
@@ -610,9 +622,30 @@ input[type="checkbox"] {
   align-items: center;
   gap: 0.5rem;
   flex-wrap: wrap;
+  transition: border-color 0.2s, background-color 0.2s;
+}
+.editor-ex-item.pinned {
+  border-color: var(--accent-2);
+  background: var(--surface);
 }
 .ex-name { font-weight: 600; flex: 1; min-width: 0; }
 .ex-meta { font-size: 0.8rem; color: var(--text-muted); width: 100%; order: 3; }
+.btn-ex-pin {
+  font-size: 1rem;
+  padding: 0.2rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  cursor: pointer;
+  opacity: 0.35;
+  filter: grayscale(100%);
+  transition: opacity 0.2s, filter 0.2s, border-color 0.2s;
+}
+.btn-ex-pin.pinned {
+  opacity: 1;
+  filter: none;
+  border-color: var(--accent-2);
+}
 .btn-ex-edit { color: var(--accent-2); font-size: 0.9rem; font-weight: 600; padding: 0.3rem 0.6rem; border: 1px solid var(--accent-2); border-radius: var(--radius-sm); }
 .btn-ex-up, .btn-ex-down { font-size: 1rem; color: var(--text-muted); padding: 0.2rem 0.5rem; border: 1px solid var(--border); border-radius: var(--radius-sm); }
 .btn-ex-del { font-size: 1rem; color: var(--danger); padding: 0.2rem 0.5rem; border: 1px solid var(--border); border-radius: var(--radius-sm); }

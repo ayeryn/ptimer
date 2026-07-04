@@ -83,44 +83,58 @@ function renderList() {
     return;
   }
 
-  // Ungrouped routines first
+  // Pinned groups first
+  const pinnedGroups = groups.filter(g => g.pinned);
+  pinnedGroups.forEach((group, indexInGroups) => {
+    renderGroup(group, indexInGroups, pinnedGroups.length, routines, container);
+  });
+
+  // Ungrouped routines next
   const ungrouped = routines.filter(r => !r.groupId);
   ungrouped.forEach((r, i) => {
     container.appendChild(buildRoutineCard(r, i, ungrouped.length));
   });
 
-  // Each group
-  groups.forEach(group => {
-    const members = routines.filter(r => r.groupId === group.id);
-    const section = document.createElement('div');
-    section.className = 'routine-group';
-    section.dataset.groupId = group.id;
-
-    const header = document.createElement('div');
-    header.className = 'group-header';
-    header.innerHTML = `
-      <span class="group-chevron">${group.collapsed ? '▸' : '▾'}</span>
-      <span class="group-name">${esc(group.name)}</span>
-      <span class="group-badge">${members.length} routine${members.length !== 1 ? 's' : ''}</span>
-      <div class="group-actions">
-        <button class="btn-group-edit" data-group-id="${group.id}" aria-label="Rename group">✏️</button>
-        <button class="btn-group-delete" data-group-id="${group.id}" aria-label="Delete group">🗑</button>
-      </div>
-    `;
-    section.appendChild(header);
-
-    const content = document.createElement('div');
-    content.className = 'group-content' + (group.collapsed ? ' collapsed' : '');
-    members.forEach((r, i) => {
-      content.appendChild(buildRoutineCard(r, i, members.length));
-    });
-    section.appendChild(content);
-
-    container.appendChild(section);
+  // Unpinned groups last
+  const unpinnedGroups = groups.filter(g => !g.pinned);
+  unpinnedGroups.forEach((group, indexInGroups) => {
+    renderGroup(group, indexInGroups, unpinnedGroups.length, routines, container);
   });
 
   // Wire drag-and-drop after render
   initDragAndDrop(container);
+}
+
+function renderGroup(group, indexInGroups, sectionLen, routines, container) {
+  const members = routines.filter(r => r.groupId === group.id);
+  const section = document.createElement('div');
+  section.className = 'routine-group';
+  section.dataset.groupId = group.id;
+
+  const header = document.createElement('div');
+  header.className = 'group-header';
+  header.innerHTML = `
+    <span class="group-chevron">${group.collapsed ? '▸' : '▾'}</span>
+    <span class="group-name">${esc(group.name)}</span>
+    <span class="group-badge">${members.length} routine${members.length !== 1 ? 's' : ''}</span>
+    <div class="group-actions">
+      <button class="btn-group-up" data-group-id="${group.id}" ${indexInGroups === 0 ? 'disabled' : ''} aria-label="Move group up">↑</button>
+      <button class="btn-group-down" data-group-id="${group.id}" ${indexInGroups === sectionLen - 1 ? 'disabled' : ''} aria-label="Move group down">↓</button>
+      <button class="btn-group-pin${group.pinned ? ' pinned' : ''}" data-group-id="${group.id}" aria-label="Pin group">📌</button>
+      <button class="btn-group-edit" data-group-id="${group.id}" aria-label="Rename group">✏️</button>
+      <button class="btn-group-delete" data-group-id="${group.id}" aria-label="Delete group">🗑</button>
+    </div>
+  `;
+  section.appendChild(header);
+
+  const content = document.createElement('div');
+  content.className = 'group-content' + (group.collapsed ? ' collapsed' : '');
+  members.forEach((r, i) => {
+    content.appendChild(buildRoutineCard(r, i, members.length));
+  });
+  section.appendChild(content);
+
+  container.appendChild(section);
 }
 
 function buildRoutineCard(r, indexInSection, sectionLen) {
@@ -350,6 +364,9 @@ document.getElementById('routine-list').addEventListener('click', e => {
 
   // Group actions
   const groupId = btn.dataset.groupId;
+  if (btn.classList.contains('btn-group-up'))     moveGroup(groupId, -1);
+  if (btn.classList.contains('btn-group-down'))   moveGroup(groupId, 1);
+  if (btn.classList.contains('btn-group-pin'))    toggleGroupPin(groupId);
   if (btn.classList.contains('btn-group-edit')) {
     const groups = getGroups();
     const group  = groups.find(g => g.id === groupId);
@@ -377,6 +394,37 @@ function toggleGroupCollapse(groupId) {
   const group  = groups.find(g => g.id === groupId);
   if (!group) return;
   group.collapsed = !group.collapsed;
+  saveGroups(groups);
+  renderList();
+}
+
+function toggleGroupPin(groupId) {
+  const groups = getGroups();
+  const group  = groups.find(g => g.id === groupId);
+  if (!group) return;
+  group.pinned = !group.pinned;
+  saveGroups(groups);
+  renderList();
+}
+
+function moveGroup(groupId, direction) {
+  const groups = getGroups();
+  const group  = groups.find(g => g.id === groupId);
+  if (!group) return;
+
+  const isPinned = !!group.pinned;
+  // Get siblings with same pin state
+  const siblings = groups.filter(g => !g.pinned === !isPinned);
+  const posInSib = siblings.findIndex(g => g.id === groupId);
+  if (posInSib < 0) return;
+  if (direction === -1 && posInSib === 0) return;
+  if (direction === 1  && posInSib === siblings.length - 1) return;
+
+  const swapTarget = siblings[posInSib + direction];
+  const globalA = groups.indexOf(group);
+  const globalB = groups.indexOf(swapTarget);
+  [groups[globalA], groups[globalB]] = [groups[globalB], groups[globalA]];
+
   saveGroups(groups);
   renderList();
 }
@@ -665,8 +713,9 @@ function renderEditor() {
   list.innerHTML = '';
   editingRoutine.exercises.forEach((ex, i) => {
     const item = document.createElement('div');
-    item.className = 'editor-ex-item';
+    item.className = 'editor-ex-item' + (ex.pinned ? ' pinned' : '');
     item.innerHTML = `
+      <button class="btn-ex-pin${ex.pinned ? ' pinned' : ''}" data-idx="${i}" aria-label="Pin exercise">📌</button>
       <span class="ex-name">${esc(ex.name || 'Unnamed')}</span>
       <span class="ex-meta">${exSummary(ex)}</span>
       <button class="btn-ex-edit" data-idx="${i}">Edit</button>
@@ -692,6 +741,15 @@ document.getElementById('editor-exercise-list').addEventListener('click', e => {
   const idx = parseInt(btn.dataset.idx);
   const exs = editingRoutine.exercises;
 
+  if (btn.classList.contains('btn-ex-pin')) {
+    exs[idx].pinned = !exs[idx].pinned;
+    // Stable sort: pinned first
+    const pinnedExs = exs.filter(ex => ex.pinned);
+    const unpinnedExs = exs.filter(ex => !ex.pinned);
+    editingRoutine.exercises = [...pinnedExs, ...unpinnedExs];
+    renderEditor();
+    return;
+  }
   if (btn.classList.contains('btn-ex-edit'))  openExerciseEditor(idx);
   if (btn.classList.contains('btn-ex-del'))  { exs.splice(idx, 1); renderEditor(); }
   if (btn.classList.contains('btn-ex-up'))   { [exs[idx-1], exs[idx]] = [exs[idx], exs[idx-1]]; renderEditor(); }
@@ -798,6 +856,7 @@ document.getElementById('btn-save-exercise').addEventListener('click', () => {
     sets:         parseInt(document.getElementById('ex-sets').value) || 3,
     rest:         parseInt(document.getElementById('ex-rest').value) || 40,
     cue:          document.getElementById('ex-cue').value.trim() || null,
+    pinned:       editingExIdx !== null ? !!editingRoutine.exercises[editingExIdx]?.pinned : false,
     // reps
     repTarget:    [
       parseInt(document.getElementById('ex-rep-min').value) || 12,

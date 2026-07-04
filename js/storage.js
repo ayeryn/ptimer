@@ -40,9 +40,37 @@ function write(key, value) {
 // ── Seed ─────────────────────────────────────────────────────────────────────
 
 export function seedIfNeeded() {
-  if (localStorage.getItem(KEYS.seeded)) return;
-  write(KEYS.routines, PRESET_ROUTINES);
-  localStorage.setItem(KEYS.seeded, '1');
+  if (!localStorage.getItem(KEYS.seeded)) {
+    write(KEYS.routines, PRESET_ROUTINES);
+    localStorage.setItem(KEYS.seeded, '1');
+    return;
+  }
+  
+  // Migration/update: check if the Deadlift routine exists in localStorage
+  const routines = getRoutines();
+  const deadliftIdx = routines.findIndex(r => r.id === 'preset-deadlift');
+  if (deadliftIdx >= 0) {
+    // 1. If it exists but does not have all 3 exercises, update/overwrite it.
+    if ((routines[deadliftIdx].exercises ?? []).length < 3) {
+      const deadliftPreset = PRESET_ROUTINES.find(r => r.id === 'preset-deadlift');
+      if (deadliftPreset) {
+        routines[deadliftIdx] = deadliftPreset;
+      }
+    }
+    // 2. Relocate to the beginning (index 0) to match its position in presets.js
+    if (deadliftIdx > 0) {
+      const [deadliftRoutine] = routines.splice(deadliftIdx, 1);
+      routines.unshift(deadliftRoutine);
+    }
+    saveRoutines(routines);
+  } else {
+    // If it does not exist at all, prepend it.
+    const deadliftPreset = PRESET_ROUTINES.find(r => r.id === 'preset-deadlift');
+    if (deadliftPreset) {
+      routines.unshift(deadliftPreset);
+      saveRoutines(routines);
+    }
+  }
 }
 
 // ── Routines ─────────────────────────────────────────────────────────────────

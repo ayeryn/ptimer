@@ -3,6 +3,47 @@
 
 export const PRESET_ROUTINES = [
   {
+    id: 'preset-deadlift',
+    name: 'Deadlift & Pull-Through',
+    note: '3 exercises • 25 lb',
+    repeat: 1,
+    exercises: [
+      {
+        id: 'ex-deadlift',
+        name: 'Deadlift',
+        type: 'reps',
+        load: '25 lb',
+        sets: 3,
+        repTarget: [12, 12],
+        tempo: { out: 2, hold: 1, return: 2 },
+        rest: 60,
+        cue: 'Keep back flat, drive through heels, and squeeze glutes at the top.',
+      },
+      {
+        id: 'ex-pull-through',
+        name: 'Cable Pull-Through',
+        type: 'reps',
+        load: '25 lb',
+        sets: 3,
+        repTarget: [12, 12],
+        tempo: { out: 2, hold: 1, return: 2 },
+        rest: 45,
+        cue: 'Reach back between legs, hinge at hips. Drive hips forward to stand, squeezing glutes at the top.',
+      },
+      {
+        id: 'ex-hip-hinge-iso',
+        name: 'Hip Hinge Isolation',
+        type: 'reps',
+        load: 'None',
+        sets: 3,
+        repTarget: [12, 12],
+        tempo: { out: 3, hold: 2, return: 3 },
+        rest: 30,
+        cue: 'Focus on pure hip-hinge mechanics. Stand tall, hinge back from hips with soft knees, hold the stretch, then stand.',
+      },
+    ],
+  },
+  {
     id: 'preset-band-strength',
     name: 'Band Strength Block',
     note: '~10–15 min • most days',
@@ -176,5 +217,4 @@ export const PRESET_ROUTINES = [
         cue: 'Arms extended, hold against rotation. Pure stabilizer endurance. Both sides.',
       },
     ],
-  },
-];
+  }];
