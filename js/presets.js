@@ -1,9 +1,65 @@
 // Eryn's seeded posture routines — data only.
 // These are written to localStorage on first run and can be edited in-app.
 
+export const PRESET_GROUPS = [
+  {
+    id: 'group-upper-body',
+    name: 'Upper Body',
+    pinned: true,
+    collapsed: false,
+  },
+  {
+    id: 'group-lower-body',
+    name: 'Lower Body',
+    pinned: true,
+    collapsed: false,
+  },
+];
+
 export const PRESET_ROUTINES = [
   {
+    id: 'preset-neck-retraction',
+    groupId: 'group-upper-body',
+    name: 'Neck Retraction',
+    note: 'Band, very light',
+    repeat: 1,
+    exercises: [
+      {
+        id: 'ex-neck-ret',
+        name: 'Neck Retraction',
+        type: 'reps',
+        load: 'Very light band',
+        sets: 3,
+        repTarget: [8, 8],
+        tempo: { out: 3, hold: 2, return: 3 },
+        rest: 30,
+        cue: 'Stop if SCM bulges or throat strains.',
+      },
+    ],
+  },
+  {
+    id: 'preset-chin-tuck',
+    groupId: 'group-upper-body',
+    name: 'Chin-Tuck Reps',
+    note: 'No equipment',
+    repeat: 1,
+    exercises: [
+      {
+        id: 'ex-chin-tuck',
+        name: 'Chin Tuck',
+        type: 'reps',
+        load: null,
+        sets: 3,
+        repTarget: [10, 10],
+        tempo: { out: 2, hold: 2, return: 2 },
+        rest: 20,
+        cue: "Backward glide to skull–spine concave, hold, release. It's a rep — train then relax.",
+      },
+    ],
+  },
+  {
     id: 'preset-deadlift',
+    groupId: 'group-lower-body',
     name: 'Deadlift & Pull-Through',
     note: '3 exercises • 25 lb',
     repeat: 1,
@@ -44,66 +100,6 @@ export const PRESET_ROUTINES = [
     ],
   },
   {
-    id: 'preset-band-strength',
-    name: 'Band Strength Block',
-    note: '~10–15 min • most days',
-    repeat: 1,
-    exercises: [
-      {
-        id: 'ex-face-pulls',
-        name: 'Face Pulls',
-        type: 'reps',
-        load: '15 lb',
-        sets: 3,
-        repTarget: [15, 20],
-        tempo: { out: 2, hold: 2, return: 3 },
-        rest: 40,
-        cue: null,
-      },
-      {
-        id: 'ex-pull-aparts',
-        name: 'Pull-Aparts',
-        type: 'reps',
-        load: '10 lb',
-        sets: 3,
-        repTarget: [15, 25],
-        tempo: { out: 2, hold: 2, return: 3 },
-        rest: 40,
-        cue: null,
-      },
-      {
-        id: 'ex-wide-rows',
-        name: 'Wide Rows',
-        type: 'reps',
-        load: '10 lb',
-        sets: 3,
-        repTarget: [15, 20],
-        tempo: { out: 2, hold: 2, return: 3 },
-        rest: 40,
-        cue: null,
-      },
-    ],
-  },
-  {
-    id: 'preset-quick-break',
-    name: 'Quick Work-Break',
-    note: '~5 min',
-    repeat: 1,
-    exercises: [
-      {
-        id: 'ex-qb-face-pulls',
-        name: 'Face Pulls',
-        type: 'reps',
-        load: '15 lb',
-        sets: 3,
-        repTarget: [12, 15],
-        tempo: { out: 2, hold: 2, return: 3 },
-        rest: 40,
-        cue: null,
-      },
-    ],
-  },
-  {
     id: 'preset-fuller-break',
     name: 'Fuller Break',
     note: '~8–10 min',
@@ -134,44 +130,6 @@ export const PRESET_ROUTINES = [
     ],
   },
   {
-    id: 'preset-neck-retraction',
-    name: 'Neck Retraction',
-    note: 'Band, very light',
-    repeat: 1,
-    exercises: [
-      {
-        id: 'ex-neck-ret',
-        name: 'Neck Retraction',
-        type: 'reps',
-        load: 'Very light band',
-        sets: 3,
-        repTarget: [8, 8],
-        tempo: { out: 3, hold: 2, return: 3 },
-        rest: 30,
-        cue: 'Stop if SCM bulges or throat strains.',
-      },
-    ],
-  },
-  {
-    id: 'preset-chin-tuck',
-    name: 'Chin-Tuck Reps',
-    note: 'No equipment',
-    repeat: 1,
-    exercises: [
-      {
-        id: 'ex-chin-tuck',
-        name: 'Chin Tuck',
-        type: 'reps',
-        load: null,
-        sets: 3,
-        repTarget: [10, 10],
-        tempo: { out: 2, hold: 2, return: 2 },
-        rest: 20,
-        cue: 'Backward glide to skull–spine concave, hold, release. It\'s a rep — train then relax.',
-      },
-    ],
-  },
-  {
     id: 'preset-prone-cobra',
     name: 'Prone Cobra',
     note: 'Isometric hold',
@@ -189,32 +147,4 @@ export const PRESET_ROUTINES = [
       },
     ],
   },
-  {
-    id: 'preset-pallof-press',
-    name: 'Pallof Press',
-    note: 'Anti-rotation • light band • per side',
-    repeat: 1,
-    exercises: [
-      {
-        id: 'ex-pallof-press',
-        name: 'Pallof Press',
-        type: 'reps',
-        load: '10 lb',
-        sets: 3,
-        repTarget: [8, 12],
-        tempo: { out: 2, hold: 3, return: 3 },
-        rest: 40,
-        cue: 'Anchor chest height, side-on. Press straight out, resist the pull into rotation. Ribs down, breathe out on the press, don\'t arch. Both sides.',
-      },
-      {
-        id: 'ex-pallof-iso',
-        name: 'Pallof Iso-Hold',
-        type: 'hold',
-        load: '10 lb',
-        sets: 3,
-        holdDuration: 25,
-        rest: 30,
-        cue: 'Arms extended, hold against rotation. Pure stabilizer endurance. Both sides.',
-      },
-    ],
-  }];
+];

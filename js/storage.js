@@ -1,7 +1,7 @@
 // storage.js — load/save routines, history, settings to localStorage.
 // Seeds presets on first run (key 'ptimer_seeded' absent).
 
-import { PRESET_ROUTINES } from './presets.js';
+import { PRESET_ROUTINES, PRESET_GROUPS } from './presets.js';
 
 const KEYS = {
   routines: 'ptimer_routines',
@@ -42,12 +42,28 @@ function write(key, value) {
 export function seedIfNeeded() {
   if (!localStorage.getItem(KEYS.seeded)) {
     write(KEYS.routines, PRESET_ROUTINES);
+    write(KEYS.groups, PRESET_GROUPS);
     localStorage.setItem(KEYS.seeded, '1');
     return;
   }
   
-  // Migration/update: check if the Deadlift routine exists in localStorage
+  // Seed groups if empty
+  if (getGroups().length === 0) {
+    saveGroups(PRESET_GROUPS);
+  }
+
+  // Update existing preset routines with their preset groups if not set
   const routines = getRoutines();
+  let updated = false;
+
+  routines.forEach(r => {
+    const preset = PRESET_ROUTINES.find(pr => pr.id === r.id);
+    if (preset && preset.groupId && !r.groupId) {
+      r.groupId = preset.groupId;
+      updated = true;
+    }
+  });
+
   const deadliftIdx = routines.findIndex(r => r.id === 'preset-deadlift');
   if (deadliftIdx >= 0) {
     // 1. If it exists but does not have all 3 exercises, update/overwrite it.
@@ -55,21 +71,20 @@ export function seedIfNeeded() {
       const deadliftPreset = PRESET_ROUTINES.find(r => r.id === 'preset-deadlift');
       if (deadliftPreset) {
         routines[deadliftIdx] = deadliftPreset;
+        updated = true;
       }
     }
-    // 2. Relocate to the beginning (index 0) to match its position in presets.js
-    if (deadliftIdx > 0) {
-      const [deadliftRoutine] = routines.splice(deadliftIdx, 1);
-      routines.unshift(deadliftRoutine);
-    }
-    saveRoutines(routines);
   } else {
     // If it does not exist at all, prepend it.
     const deadliftPreset = PRESET_ROUTINES.find(r => r.id === 'preset-deadlift');
     if (deadliftPreset) {
       routines.unshift(deadliftPreset);
-      saveRoutines(routines);
+      updated = true;
     }
+  }
+
+  if (updated) {
+    saveRoutines(routines);
   }
 }
 
