@@ -86,7 +86,7 @@ export function seedIfNeeded() {
   }
 
   // Add newly introduced built-in routines without changing existing routines.
-  ['preset-tricep-pulldown', 'preset-single-side-tricep-extension'].forEach(id => {
+  ['preset-tricep-pulldown', 'preset-single-side-tricep-extension', 'preset-leg-kickback', 'preset-bulgarian-squat'].forEach(id => {
     if (routines.some(routine => routine.id === id)) return;
     const preset = PRESET_ROUTINES.find(routine => routine.id === id);
     if (preset) {
