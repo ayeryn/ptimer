@@ -52,13 +52,14 @@ export function seedIfNeeded() {
     saveGroups(PRESET_GROUPS);
   }
 
-  // Update existing preset routines with their preset groups if not set
+  // Update built-ins with their preset group if it is absent or no longer exists.
   const routines = getRoutines();
+  const groupIds = new Set(getGroups().map(group => group.id));
   let updated = false;
 
   routines.forEach(r => {
     const preset = PRESET_ROUTINES.find(pr => pr.id === r.id);
-    if (preset && preset.groupId && !r.groupId) {
+    if (preset && preset.groupId && groupIds.has(preset.groupId) && (!r.groupId || !groupIds.has(r.groupId))) {
       r.groupId = preset.groupId;
       updated = true;
     }
@@ -66,8 +67,9 @@ export function seedIfNeeded() {
 
   const deadliftIdx = routines.findIndex(r => r.id === 'preset-deadlift');
   if (deadliftIdx >= 0) {
-    // 1. If it exists but does not have all 3 exercises, update/overwrite it.
-    if ((routines[deadliftIdx].exercises ?? []).length < 3) {
+    const legacyExerciseIds = ['ex-deadlift', 'ex-pull-through', 'ex-hip-hinge-iso'];
+    const existingExerciseIds = (routines[deadliftIdx].exercises ?? []).map(exercise => exercise.id);
+    if (legacyExerciseIds.every(id => existingExerciseIds.includes(id))) {
       const deadliftPreset = PRESET_ROUTINES.find(r => r.id === 'preset-deadlift');
       if (deadliftPreset) {
         routines[deadliftIdx] = deadliftPreset;
@@ -80,6 +82,29 @@ export function seedIfNeeded() {
     if (deadliftPreset) {
       routines.unshift(deadliftPreset);
       updated = true;
+    }
+  }
+
+  // Add newly introduced built-in routines without changing existing routines.
+  ['preset-tricep-pulldown', 'preset-single-side-tricep-extension'].forEach(id => {
+    if (routines.some(routine => routine.id === id)) return;
+    const preset = PRESET_ROUTINES.find(routine => routine.id === id);
+    if (preset) {
+      routines.push(preset);
+      updated = true;
+    }
+  });
+
+  // Upgrade the original single-side preset so both arms receive timed sets.
+  const singleSideIdx = routines.findIndex(routine => routine.id === 'preset-single-side-tricep-extension');
+  if (singleSideIdx >= 0) {
+    const exerciseIds = (routines[singleSideIdx].exercises ?? []).map(exercise => exercise.id);
+    if (exerciseIds.length === 1 && exerciseIds[0] === 'ex-single-side-tricep-extension') {
+      const preset = PRESET_ROUTINES.find(routine => routine.id === 'preset-single-side-tricep-extension');
+      if (preset) {
+        routines[singleSideIdx] = preset;
+        updated = true;
+      }
     }
   }
 

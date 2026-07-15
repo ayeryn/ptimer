@@ -90,7 +90,9 @@ function renderList() {
   });
 
   // Ungrouped routines next
-  const ungrouped = routines.filter(r => !r.groupId);
+  const knownGroupIds = new Set(groups.map(group => group.id));
+  // Never hide a routine solely because its saved group was deleted or renamed.
+  const ungrouped = routines.filter(r => !r.groupId || !knownGroupIds.has(r.groupId));
   ungrouped.forEach((r, i) => {
     container.appendChild(buildRoutineCard(r, i, ungrouped.length));
   });
@@ -849,6 +851,9 @@ document.querySelectorAll('input[name="ex-type"]').forEach(radio => {
 
 document.getElementById('btn-save-exercise').addEventListener('click', () => {
   const isReps = document.getElementById('ex-type-reps').checked;
+  const tempoOut = parseFloat(document.getElementById('ex-tempo-out').value);
+  const tempoHold = parseFloat(document.getElementById('ex-tempo-hold').value);
+  const tempoReturn = parseFloat(document.getElementById('ex-tempo-return').value);
   const ex = {
     id:           editingExIdx !== null ? editingRoutine.exercises[editingExIdx]?.id ?? newId('ex') : newId('ex'),
     name:         document.getElementById('ex-name').value.trim() || 'Unnamed',
@@ -864,9 +869,9 @@ document.getElementById('btn-save-exercise').addEventListener('click', () => {
       parseInt(document.getElementById('ex-rep-max').value) || 15,
     ],
     tempo: {
-      out:    parseFloat(document.getElementById('ex-tempo-out').value) || 2,
-      hold:   parseFloat(document.getElementById('ex-tempo-hold').value) || 2,
-      return: parseFloat(document.getElementById('ex-tempo-return').value) || 3,
+      out:    Number.isFinite(tempoOut) ? tempoOut : 2,
+      hold:   Number.isFinite(tempoHold) ? tempoHold : 2,
+      return: Number.isFinite(tempoReturn) ? tempoReturn : 3,
     },
     // hold
     holdDuration: parseInt(document.getElementById('ex-hold-duration').value) || 20,
@@ -963,9 +968,11 @@ function esc(str) {
 // ── Service worker registration ───────────────────────────────────────────────
 
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js').catch(() => {
-    // Graceful degradation — app works without SW (localhost / no HTTPS)
-  });
+  navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' })
+    .then(registration => registration.update())
+    .catch(() => {
+      // Graceful degradation — app works without SW (localhost / no HTTPS)
+    });
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────

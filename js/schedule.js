@@ -76,17 +76,21 @@ export function buildSchedule(routine) {
               cue:          exercise.cue ?? null,
               exerciseName: exercise.name,
             });
-            phases.push({
-              type:         'rep:hold',
-              duration:     exercise.tempo.hold,
-              label:        'HOLD',
-              subLabel:     `Rep ${repIdx + 1} / ${repTarget}`,
-              exerciseIdx:  exIdx,
-              setIdx:       setIdx,
-              repIdx:       repIdx,
-              cue:          exercise.cue ?? null,
-              exerciseName: exercise.name,
-            });
+            // A zero-second hold means no hold at all: do not create a phase
+            // that the cue system could announce before immediately skipping.
+            if (Number(exercise.tempo?.hold) > 0) {
+              phases.push({
+                type:         'rep:hold',
+                duration:     exercise.tempo.hold,
+                label:        'HOLD',
+                subLabel:     `Rep ${repIdx + 1} / ${repTarget}`,
+                exerciseIdx:  exIdx,
+                setIdx:       setIdx,
+                repIdx:       repIdx,
+                cue:          exercise.cue ?? null,
+                exerciseName: exercise.name,
+              });
+            }
             phases.push({
               type:         'rep:return',
               duration:     exercise.tempo.return,
@@ -229,6 +233,20 @@ export function selfTest() {
   // hold set 1 ends with rest, hold set 2 is last → no rest = 3 total rest phases
   const restPhases = types.filter(t => t === 'rest').length;
   console.assert(restPhases === 3, `Expected 3 rest phases, got ${restPhases}`);
+
+  const noHoldSchedule = buildSchedule({
+    ...testRoutine,
+    exercises: [{
+      ...testRoutine.exercises[0],
+      sets: 1,
+      repTarget: [1, 1],
+      tempo: { out: 2, hold: 0, return: 3 },
+    }],
+  });
+  console.assert(
+    !noHoldSchedule.some(p => p.type === 'rep:hold'),
+    'A zero-second rep hold should not create a hold phase',
+  );
 
   // Last real phase before 'done' should NOT be rest (last set of last exercise)
   const secondToLast = types[types.length - 2];
