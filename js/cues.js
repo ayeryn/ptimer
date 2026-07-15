@@ -57,17 +57,11 @@ export class CueEngine {
 
     switch (type) {
       case 'get-ready':
-        // The visual countdown is enough context here. Three beeps below
-        // lead directly into the first "Out" cue when this phase ends.
+        // Timed cues below announce the set before the first "Out" cue.
         break;
 
       case 'rep:out':
-        if (phase.repIdx === 0) {
-          // First rep of a set — announce the set
-          this._speak(`Set ${setIdx + 1}. Out.`);
-        } else {
-          this._speak('Out.');
-        }
+        this._speak('Out.');
         this._beep('phase');
         break;
 
@@ -101,21 +95,41 @@ export class CueEngine {
   }
 
   /**
-   * Called on every onTick to cue the last 3 seconds of a get-ready phase.
-   * Beeps use the same phase clock as the visual countdown, so they cannot
-   * queue speech and fall behind the timer.
+   * Called on every onTick for countdown cues. Beeps use the same phase clock
+   * as the visual countdown, so they cannot queue speech and fall behind it.
    */
   onTick(remaining, phase) {
     if (phase.type === 'get-ready') {
       const secs = Math.ceil(remaining);
-      if (secs <= 3 && secs >= 1 && secs !== this._lastBeepCount) {
+      if (secs === 2 && this._lastSpokenCount !== secs) {
+        this._lastSpokenCount = secs;
+        this._speak(`Set ${phase.setIdx + 1}.`);
+      }
+      if (secs === 3 && secs !== this._lastBeepCount) {
         this._lastBeepCount = secs;
         this._beep('ready');
       }
       return;
     }
 
-    if (!['rest', 'hold'].includes(phase.type)) return;
+    if (phase.type === 'rest') {
+      const secs = Math.ceil(remaining);
+      if (secs === 10 && this._lastSpokenCount !== secs) {
+        this._lastSpokenCount = secs;
+        this._speak('10 seconds left.');
+      }
+      if (secs === 2 && phase.label === 'REST' && this._lastSpokenCount !== secs) {
+        this._lastSpokenCount = secs;
+        this._speak(`Set ${phase.setIdx + 2}.`);
+      }
+      if (secs <= 5 && secs >= 3 && secs !== this._lastBeepCount) {
+        this._lastBeepCount = secs;
+        this._beep('ready');
+      }
+      return;
+    }
+
+    if (phase.type !== 'hold') return;
     const secs = Math.round(remaining);
     if (secs <= 3 && secs >= 1) {
       this._speakCount(secs);
