@@ -9,7 +9,18 @@ const KEYS = {
   settings: 'ptimer_settings',
   seeded:   'ptimer_seeded',
   groups:   'ptimer_groups',
+  cloud:    'ptimer_cloud',    // gist token + id — NOT part of the synced snapshot
+  updated:  'ptimer_updated',  // last local-change timestamp (ms), for last-write-wins
 };
+
+// Keys whose writes represent user data and should trigger a cloud push.
+const SYNCED = new Set([KEYS.routines, KEYS.history, KEYS.settings, KEYS.groups]);
+
+let changeListener = null;   // set by cloud layer to schedule a push
+let notifySuspended = false; // true while applying a remote snapshot
+
+// Register a callback fired after any local data change (for cloud sync).
+export function onDataChange(fn) { changeListener = fn; }
 
 // ── Defaults ────────────────────────────────────────────────────────────────
 
@@ -35,6 +46,10 @@ function read(key, fallback) {
 
 function write(key, value) {
   localStorage.setItem(key, JSON.stringify(value));
+  if (SYNCED.has(key) && !notifySuspended) {
+    localStorage.setItem(KEYS.updated, String(Date.now()));
+    changeListener?.();
+  }
 }
 
 // ── Seed ─────────────────────────────────────────────────────────────────────
@@ -197,4 +212,47 @@ export function saveSettings(settings) {
 
 export function newId(prefix = 'id') {
   return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
+}
+
+// ── Cloud sync support ────────────────────────────────────────────────────────
+
+export function getLocalUpdated() {
+  return Number(localStorage.getItem(KEYS.updated)) || 0;
+}
+
+// Full user-data snapshot pushed to / pulled from the cloud (token excluded).
+export function snapshot() {
+  return {
+    version:   1,
+    updatedAt: getLocalUpdated(),
+    routines:  getRoutines(),
+    groups:    getGroups(),
+    settings:  read(KEYS.settings, {}),
+    history:   getHistory(),
+  };
+}
+
+// Apply a remote snapshot without re-triggering a push (suspend the notifier).
+export function restoreSnapshot(data) {
+  notifySuspended = true;
+  try {
+    if (Array.isArray(data.routines)) write(KEYS.routines, data.routines);
+    if (Array.isArray(data.groups))   write(KEYS.groups,   data.groups);
+    if (Array.isArray(data.history))  write(KEYS.history,  data.history);
+    if (data.settings && typeof data.settings === 'object') write(KEYS.settings, data.settings);
+    localStorage.setItem(KEYS.updated, String(data.updatedAt || Date.now()));
+    localStorage.setItem(KEYS.seeded, '1');
+  } finally {
+    notifySuspended = false;
+  }
+}
+
+const DEFAULT_CLOUD = { token: '', gistId: '', enabled: false };
+
+export function getCloudConfig() {
+  return { ...DEFAULT_CLOUD, ...read(KEYS.cloud, {}) };
+}
+
+export function setCloudConfig(cfg) {
+  localStorage.setItem(KEYS.cloud, JSON.stringify({ ...DEFAULT_CLOUD, ...cfg }));
 }

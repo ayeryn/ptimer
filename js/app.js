@@ -3,10 +3,13 @@
 import { seedIfNeeded, getRoutines, saveRoutine, saveRoutines, deleteRoutine,
          getGroups, saveGroups, saveGroup, deleteGroup,
          getSettings, saveSettings, addSession, getHistory,
-         clearHistory, newId } from './storage.js';
+         clearHistory, newId, onDataChange,
+         getCloudConfig, setCloudConfig } from './storage.js';
 import { buildSchedule } from './schedule.js';
 import { SessionEngine } from './engine.js';
 import { CueEngine } from './cues.js';
+import { schedulePush, syncOnBoot, pullNow, pushNow,
+         setStatusHandler } from './cloud.js';
 
 // ── Boot ──────────────────────────────────────────────────────────────────────
 
@@ -937,6 +940,12 @@ function renderSettings() {
   document.getElementById('setting-global-cue').value = settings.globalCue;
   document.getElementById('setting-voice-rate').value = settings.voiceRate ?? 1.0;
   document.getElementById('setting-theme').value      = settings.theme ?? 'auto';
+
+  const cloud = getCloudConfig();
+  document.getElementById('setting-cloud-enabled').checked = cloud.enabled;
+  document.getElementById('setting-cloud-token').value     = cloud.token;
+  document.getElementById('setting-cloud-gist').value      = cloud.gistId;
+  setCloudStatus('');
 }
 
 document.getElementById('btn-save-settings').addEventListener('click', () => {
@@ -946,7 +955,16 @@ document.getElementById('btn-save-settings').addEventListener('click', () => {
   settings.globalCue = document.getElementById('setting-global-cue').value.trim() || 'Blades back and down — no shrug.';
   settings.voiceRate = parseFloat(document.getElementById('setting-voice-rate').value) || 1.0;
   settings.theme     = document.getElementById('setting-theme').value || 'auto';
-  saveSettings(settings);
+
+  // Persist cloud config before saving settings so a resulting push carries the
+  // right token/gist. Config lives outside the synced snapshot.
+  setCloudConfig({
+    enabled: document.getElementById('setting-cloud-enabled').checked,
+    token:   document.getElementById('setting-cloud-token').value.trim(),
+    gistId:  document.getElementById('setting-cloud-gist').value.trim(),
+  });
+
+  saveSettings(settings);   // triggers a debounced push if sync is enabled
   cueEngine.updateSettings(settings);
   applyTheme(settings.theme);
   showScreen('list');
@@ -954,6 +972,48 @@ document.getElementById('btn-save-settings').addEventListener('click', () => {
 });
 
 document.getElementById('btn-settings-back').addEventListener('click', () => showScreen('list'));
+
+// ── Cloud sync UI ─────────────────────────────────────────────────────────────
+
+function setCloudStatus(msg, kind) {
+  const el = document.getElementById('cloud-status');
+  if (!el) return;
+  el.textContent = msg;
+  el.className = 'cloud-status' + (kind ? ` cloud-status-${kind}` : '');
+}
+setStatusHandler(setCloudStatus);
+
+// Re-render everything after a remote snapshot replaces local data.
+function applyRemoteData() {
+  settings = getSettings();
+  cueEngine.updateSettings(settings);
+  applyTheme(settings.theme ?? 'auto');
+  renderSettings();
+  renderList();
+}
+
+// Persist whatever is currently typed in the cloud fields (so a Push/Pull works
+// without needing to Save settings first).
+function commitCloudFields() {
+  setCloudConfig({
+    enabled: document.getElementById('setting-cloud-enabled').checked,
+    token:   document.getElementById('setting-cloud-token').value.trim(),
+    gistId:  document.getElementById('setting-cloud-gist').value.trim(),
+  });
+}
+
+document.getElementById('btn-cloud-push').addEventListener('click', async () => {
+  commitCloudFields();
+  try { await pushNow(); document.getElementById('setting-cloud-gist').value = getCloudConfig().gistId; }
+  catch (e) { setCloudStatus(`Push failed: ${e.message}`, 'err'); }
+});
+
+document.getElementById('btn-cloud-pull').addEventListener('click', async () => {
+  commitCloudFields();
+  if (!confirm('Pull cloud data? This replaces the routines, groups, settings and history on this device.')) return;
+  try { await pullNow(applyRemoteData); }
+  catch (e) { setCloudStatus(`Pull failed: ${e.message}`, 'err'); }
+});
 
 // ── Utilities ─────────────────────────────────────────────────────────────────
 
@@ -979,3 +1039,8 @@ if ('serviceWorker' in navigator) {
 
 renderList();
 showScreen('list');
+
+// Wire cloud sync: auto-push on any local change, and reconcile with the gist
+// on boot (renders from local first, applies remote in the background if newer).
+onDataChange(schedulePush);
+syncOnBoot(applyRemoteData);

@@ -576,6 +576,7 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
 .form-group label { font-size: 0.9rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
 
 input[type="text"],
+input[type="password"],
 input[type="number"],
 input[type="range"],
 select {
@@ -590,10 +591,24 @@ select {
 }
 .toggle-row select { width: auto; }
 input[type="text"]:focus,
+input[type="password"]:focus,
 input[type="number"]:focus {
   outline: none;
   border-color: var(--accent-2);
 }
+
+/* Cloud sync */
+.form-hint {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+  margin: 0.2rem 0 0.4rem;
+}
+.form-hint-inline { font-weight: 400; text-transform: none; letter-spacing: 0; color: var(--text-muted); }
+.cloud-actions { flex-direction: row; gap: 1rem; }
+.cloud-status { font-size: 0.9rem; min-height: 1.2em; color: var(--text-muted); margin: 0.2rem 0 0; }
+.cloud-status-ok  { color: var(--accent); }
+.cloud-status-err { color: var(--danger); }
 
 input[type="checkbox"] {
   width: 1.5rem; height: 1.5rem;

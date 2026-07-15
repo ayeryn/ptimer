@@ -269,6 +269,29 @@
       <label for="setting-global-cue">Shown during every session</label>
       <input id="setting-global-cue" type="text" value="Blades back and down — no shrug." />
     </div>
+
+    <h3 class="section-heading">Cloud Sync (GitHub Gist)</h3>
+    <p class="form-hint">Backs up routines, groups, settings &amp; history to a private
+      GitHub gist so they survive storage being cleared. Needs a token with
+      <strong>gist</strong> scope only.</p>
+    <div class="form-group toggle-row">
+      <label for="setting-cloud-enabled">Enable sync</label>
+      <input id="setting-cloud-enabled" type="checkbox" />
+    </div>
+    <div class="form-group">
+      <label for="setting-cloud-token">Personal access token (gist scope)</label>
+      <input id="setting-cloud-token" type="password" autocomplete="off"
+             placeholder="ghp_… (stored on this device only)" />
+    </div>
+    <div class="form-group">
+      <label for="setting-cloud-gist">Gist ID <span class="form-hint-inline">(blank = create new on first sync)</span></label>
+      <input id="setting-cloud-gist" type="text" autocomplete="off" placeholder="e.g. a1b2c3…" />
+    </div>
+    <div class="form-group cloud-actions">
+      <button id="btn-cloud-push" type="button" class="btn-text">Push now</button>
+      <button id="btn-cloud-pull" type="button" class="btn-text">Pull now</button>
+    </div>
+    <p id="cloud-status" class="cloud-status" aria-live="polite"></p>
   </div>
 </section>
 
