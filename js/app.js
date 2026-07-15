@@ -3,7 +3,8 @@
 import { seedIfNeeded, getRoutines, saveRoutine, saveRoutines, deleteRoutine,
          getGroups, saveGroups, saveGroup, deleteGroup,
          getSettings, saveSettings, addSession, getHistory,
-         clearHistory, newId } from './storage.js';
+         clearHistory, newId,
+         recordBoot, getInstallId, getBootLog } from './storage.js';
 import { buildSchedule } from './schedule.js';
 import { SessionEngine } from './engine.js';
 import { CueEngine } from './cues.js';
@@ -11,6 +12,7 @@ import { CueEngine } from './cues.js';
 // ── Boot ──────────────────────────────────────────────────────────────────────
 
 seedIfNeeded();
+recordBoot();   // storage-wipe diagnostics (see storage.js)
 
 let settings   = getSettings();
 let cueEngine  = new CueEngine(settings);
@@ -937,6 +939,24 @@ function renderSettings() {
   document.getElementById('setting-global-cue').value = settings.globalCue;
   document.getElementById('setting-voice-rate').value = settings.voiceRate ?? 1.0;
   document.getElementById('setting-theme').value      = settings.theme ?? 'auto';
+  renderDiagnostics();
+}
+
+function renderDiagnostics() {
+  const idEl  = document.getElementById('diag-install-id');
+  const logEl = document.getElementById('diag-boot-log');
+  if (idEl)  idEl.textContent = getInstallId();
+  if (!logEl) return;
+
+  const log = getBootLog();
+  if (log.length === 0) { logEl.textContent = 'No boots recorded yet.'; return; }
+
+  logEl.textContent = log.map(b => {
+    const d = new Date(b.t);
+    const when = d.toLocaleString('en-US',
+      { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+    return `${when} · ${b.n} routines${b.fresh ? ' · ⚠️ FRESH INSTALL (storage was empty)' : ''}`;
+  }).join('\n');
 }
 
 document.getElementById('btn-save-settings').addEventListener('click', () => {

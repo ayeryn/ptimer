@@ -269,6 +269,19 @@
       <label for="setting-global-cue">Shown during every session</label>
       <input id="setting-global-cue" type="text" value="Blades back and down — no shrug." />
     </div>
+
+    <h3 class="section-heading">Diagnostics</h3>
+    <p class="form-hint">Tracking storage wipes. The <strong>Install ID</strong> stays the
+      same across app updates — if it <em>changes</em>, your data was cleared. A boot marked
+      <strong>FRESH INSTALL</strong> means storage was empty at launch.</p>
+    <div class="form-group">
+      <label>Install ID</label>
+      <code id="diag-install-id" class="diag-id">—</code>
+    </div>
+    <div class="form-group">
+      <label>Recent boots</label>
+      <pre id="diag-boot-log" class="diag-log">—</pre>
+    </div>
   </div>
 </section>
 

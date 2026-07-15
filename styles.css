@@ -622,6 +622,32 @@ input[type="checkbox"] {
 
 .section-heading { font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); padding-top: 0.5rem; border-top: 1px solid var(--border); }
 
+/* Diagnostics */
+.form-hint { font-size: 0.85rem; color: var(--text-muted); line-height: 1.4; margin: 0.2rem 0 0.4rem; }
+.diag-id {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.95rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 0.7rem;
+  word-break: break-all;
+  color: var(--text);
+}
+.diag-log {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.6rem 0.7rem;
+  white-space: pre-wrap;
+  color: var(--text);
+  max-height: 40vh;
+  overflow-y: auto;
+}
+
 /* ── Editor exercise list ──────────────────────────────────────────────────── */
 .editor-ex-list { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 0.5rem; }
 .editor-ex-item {

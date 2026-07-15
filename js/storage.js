@@ -198,3 +198,44 @@ export function saveSettings(settings) {
 export function newId(prefix = 'id') {
   return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
 }
+
+// ── Storage-wipe diagnostics ───────────────────────────────────────────────────
+// Goal: find out WHEN and HOW localStorage gets cleared. `installId` is written
+// once and never changes — unless storage is wiped, in which case a new one is
+// minted. So a changed installId after an app update === data was wiped. The
+// boot log records each app launch so the history is visible on the phone.
+
+const BOOT_LOG   = 'ptimer_boot_log';
+const INSTALL_ID = 'ptimer_install_id';
+const MAX_BOOTS  = 30;
+
+// Call once on boot, AFTER seedIfNeeded(). Returns the recorded entry.
+export function recordBoot() {
+  let installId = localStorage.getItem(INSTALL_ID);
+  const fresh = !installId;           // true on first-ever boot OR after a wipe
+  if (fresh) {
+    installId = newId('inst');
+    localStorage.setItem(INSTALL_ID, installId);
+  }
+
+  const entry = {
+    t:       Date.now(),
+    fresh,                            // was a brand-new install id minted this boot?
+    n:       getRoutines().length,    // routine count (drops to preset count on a wipe)
+    install: installId,
+  };
+
+  const log = read(BOOT_LOG, []);
+  log.unshift(entry);
+  localStorage.setItem(BOOT_LOG, JSON.stringify(log.slice(0, MAX_BOOTS)));
+  try { console.log('[ptimer] boot', entry); } catch {}
+  return entry;
+}
+
+export function getInstallId() {
+  return localStorage.getItem(INSTALL_ID) || '(none yet)';
+}
+
+export function getBootLog() {
+  return read(BOOT_LOG, []);
+}
