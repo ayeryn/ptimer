@@ -11,6 +11,7 @@ export class CueEngine {
     this._speechQueue    = [];
     this._speaking       = false;
     this._lastSpokenCount = null;
+    this._lastBeepCount  = null;
   }
 
   // ── Unlock (call on first user gesture / Start tap) ───────────────────────
@@ -51,12 +52,13 @@ export class CueEngine {
    */
   onPhaseStart(phase) {
     this._lastSpokenCount = null;
-    const { type, label, exerciseName, setIdx, exerciseIdx } = phase;
+    this._lastBeepCount = null;
+    const { type, label, setIdx } = phase;
 
     switch (type) {
       case 'get-ready':
-        this._speak(`${exerciseName}. Get ready.`);
-        this._beep('ready');
+        // The visual countdown is enough context here. Three beeps below
+        // lead directly into the first "Out" cue when this phase ends.
         break;
 
       case 'rep:out':
@@ -99,11 +101,21 @@ export class CueEngine {
   }
 
   /**
-   * Called on every onTick when the phase is 'rest' or 'get-ready' to count
-   * down the last 3 seconds aloud.
+   * Called on every onTick to cue the last 3 seconds of a get-ready phase.
+   * Beeps use the same phase clock as the visual countdown, so they cannot
+   * queue speech and fall behind the timer.
    */
   onTick(remaining, phase) {
-    if (!['rest', 'get-ready', 'hold'].includes(phase.type)) return;
+    if (phase.type === 'get-ready') {
+      const secs = Math.ceil(remaining);
+      if (secs <= 3 && secs >= 1 && secs !== this._lastBeepCount) {
+        this._lastBeepCount = secs;
+        this._beep('ready');
+      }
+      return;
+    }
+
+    if (!['rest', 'hold'].includes(phase.type)) return;
     const secs = Math.round(remaining);
     if (secs <= 3 && secs >= 1) {
       this._speakCount(secs);
