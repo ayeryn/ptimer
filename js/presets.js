@@ -71,7 +71,7 @@ export const PRESET_ROUTINES = [
         load: 'Door-anchored band',
         sets: 3,
         repTarget: [12, 12],
-        tempo: { out: 2, hold: 1, return: 3 },
+        tempo: { out: 2, hold: 0, return: 3 },
         rest: 60,
         cue: 'Start hinged. Stand tall against the band, squeeze glutes for the hold, then hinge back slowly with a neutral spine.',
       },
