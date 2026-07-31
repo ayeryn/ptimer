@@ -4,7 +4,7 @@
 //   { type, duration, label, subLabel, exerciseIdx, setIdx, repIdx, cue, exerciseName }
 //
 // Phase types:
-//   'get-ready'   — 3s countdown before first set
+//   'get-ready'   — 10s countdown before first set
 //   'rep:out'     — outward phase of a rep
 //   'rep:hold'    — hold phase of a rep
 //   'rep:return'  — return phase of a rep
@@ -30,11 +30,11 @@ export function buildSchedule(routine) {
       for (let setIdx = 0; setIdx < exercise.sets; setIdx++) {
         const isLastSet = setIdx === exercise.sets - 1;
 
-        // GET READY (only before the very first set of a round; 3s gap between exercises too)
+        // GET READY (only before the very first set of a round; 2s gap between exercises too)
         if (setIdx === 0) {
           phases.push({
             type:         'get-ready',
-            duration:     isFirstExercise && setIdx === 0 ? 3 : 2,
+            duration:     isFirstExercise && setIdx === 0 ? 10 : 2,
             label:        'GET READY',
             subLabel:     exercise.name,
             exerciseIdx:  exIdx,
