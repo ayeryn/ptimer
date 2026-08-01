@@ -3,15 +3,20 @@
 // Must be unlocked by a user gesture before use (call unlock() on Start tap).
 // Each channel (voice, beeps) is independently togglable.
 
+/** Speakable ' Left.' for a set label, or '' when the set has none. */
+function suffixLabel(setLabel) {
+  return setLabel ? ` ${setLabel}.` : "";
+}
+
 export class CueEngine {
   constructor(settings) {
-    this._settings       = settings;
-    this._audioCtx       = null;
-    this._unlocked       = false;
-    this._speechQueue    = [];
-    this._speaking       = false;
+    this._settings = settings;
+    this._audioCtx = null;
+    this._unlocked = false;
+    this._speechQueue = [];
+    this._speaking = false;
     this._lastSpokenCount = null;
-    this._lastBeepCount  = null;
+    this._lastBeepCount = null;
   }
 
   // ── Unlock (call on first user gesture / Start tap) ───────────────────────
@@ -27,12 +32,12 @@ export class CueEngine {
       src.connect(this._audioCtx.destination);
       src.start(0);
     } catch (e) {
-      console.warn('CueEngine: could not create AudioContext', e);
+      console.warn("CueEngine: could not create AudioContext", e);
     }
 
     // Prime speech synthesis on iOS (first utterance often silent)
     if (window.speechSynthesis) {
-      const u = new SpeechSynthesisUtterance('');
+      const u = new SpeechSynthesisUtterance("");
       u.volume = 0;
       window.speechSynthesis.speak(u);
     }
@@ -56,40 +61,43 @@ export class CueEngine {
     const { type, label, setIdx } = phase;
 
     switch (type) {
-      case 'get-ready':
+      case "get-ready":
         // Timed cues below announce the set before the first "Out" cue.
         break;
 
-      case 'rep:out':
-        this._speak('Out.');
-        this._beep('phase');
+      case "rep:out":
+        this._speak("Out.");
+        this._beep("phase");
         break;
 
-      case 'rep:hold':
-        this._speak('Hold.');
-        this._beep('phase-soft');
+      case "rep:hold":
+        this._speak("Hold.");
+        this._beep("phase-soft");
         break;
 
-      case 'rep:return':
-        this._speak('Return.');
-        this._beep('phase');
+      case "rep:return":
+        this._speak("Return.");
+        this._beep("phase");
         break;
 
-      case 'hold':
-        this._speak(`Set ${setIdx + 1}. Hold.`);
-        this._beep('ready');
+      case "hold":
+        this._speak(`Set ${setIdx + 1}.${suffixLabel(phase.setLabel)} Hold.`);
+        this._beep("ready");
         break;
 
-      case 'rest': {
-        const restLabel = label === 'NEXT EXERCISE' ? `Next: ${phase.subLabel}.` : 'Rest.';
+      case "rest": {
+        const restLabel =
+          label === "NEXT EXERCISE"
+            ? `Next: ${phase.subLabel}.${suffixLabel(phase.setLabel)}`
+            : "Rest.";
         this._speak(restLabel);
-        this._beep('rest');
+        this._beep("rest");
         break;
       }
 
-      case 'done':
-        this._speak('Done. Great work!');
-        this._beep('done');
+      case "done":
+        this._speak("Done. Great work!");
+        this._beep("done");
         break;
     }
   }
@@ -99,37 +107,41 @@ export class CueEngine {
    * as the visual countdown, so they cannot queue speech and fall behind it.
    */
   onTick(remaining, phase) {
-    if (phase.type === 'get-ready') {
+    if (phase.type === "get-ready") {
       const secs = Math.ceil(remaining);
       if (secs === 2 && this._lastSpokenCount !== secs) {
         this._lastSpokenCount = secs;
-        this._speak(`Set ${phase.setIdx + 1}.`);
+        this._speak(`Set ${phase.setIdx + 1}.${suffixLabel(phase.setLabel)}`);
       }
       if (secs === 3 && secs !== this._lastBeepCount) {
         this._lastBeepCount = secs;
-        this._beep('ready');
+        this._beep("ready");
       }
       return;
     }
 
-    if (phase.type === 'rest') {
+    if (phase.type === "rest") {
       const secs = Math.ceil(remaining);
       if (secs === 10 && this._lastSpokenCount !== secs) {
         this._lastSpokenCount = secs;
-        this._speak('10 seconds left.');
+        this._speak("10 seconds left.");
       }
-      if (secs === 2 && phase.label === 'REST' && this._lastSpokenCount !== secs) {
+      if (
+        secs === 2 &&
+        phase.label === "REST" &&
+        this._lastSpokenCount !== secs
+      ) {
         this._lastSpokenCount = secs;
-        this._speak(`Set ${phase.setIdx + 2}.`);
+        this._speak(`Set ${phase.setIdx + 2}.${suffixLabel(phase.setLabel)}`);
       }
       if (secs <= 5 && secs >= 3 && secs !== this._lastBeepCount) {
         this._lastBeepCount = secs;
-        this._beep('ready');
+        this._beep("ready");
       }
       return;
     }
 
-    if (phase.type !== 'hold') return;
+    if (phase.type !== "hold") return;
     const secs = Math.round(remaining);
     if (secs <= 3 && secs >= 1) {
       this._speakCount(secs);
@@ -152,7 +164,7 @@ export class CueEngine {
     if (interrupt) {
       window.speechSynthesis.cancel();
       this._speechQueue = [];
-      this._speaking    = false;
+      this._speaking = false;
     }
 
     this._speechQueue.push(text);
@@ -160,15 +172,18 @@ export class CueEngine {
   }
 
   _flushSpeech() {
-    if (!this._speechQueue.length) { this._speaking = false; return; }
+    if (!this._speechQueue.length) {
+      this._speaking = false;
+      return;
+    }
     this._speaking = true;
     const text = this._speechQueue.shift();
-    const u    = new SpeechSynthesisUtterance(text);
-    u.rate      = this._settings.voiceRate ?? 1.0;
-    u.pitch     = 1.0;
-    u.volume    = 1.0;
-    u.onend     = () => this._flushSpeech();
-    u.onerror   = () => this._flushSpeech();
+    const u = new SpeechSynthesisUtterance(text);
+    u.rate = this._settings.voiceRate ?? 1.0;
+    u.pitch = 1.0;
+    u.volume = 1.0;
+    u.onend = () => this._flushSpeech();
+    u.onerror = () => this._flushSpeech();
     window.speechSynthesis.speak(u);
   }
 
@@ -176,8 +191,8 @@ export class CueEngine {
   _speakCount(n) {
     if (n === this._lastSpokenCount) return;
     this._lastSpokenCount = n;
-    const words = ['', 'one', 'two', 'three', 'four', 'five'];
-    const word  = words[n] ?? String(n);
+    const words = ["", "one", "two", "three", "four", "five"];
+    const word = words[n] ?? String(n);
     this._speak(word);
   }
 
@@ -189,17 +204,17 @@ export class CueEngine {
 
     const configs = {
       // kind:      [freq, gainPeak, duration]
-      ready:      [660,  0.3, 0.12],
-      phase:      [880,  0.25, 0.08],
-      'phase-soft': [660, 0.15, 0.06],
-      rest:       [440,  0.3, 0.15],
-      done:       [880,  0.4, 0.08],  // will play a quick ascending pair
+      ready: [660, 0.3, 0.12],
+      phase: [880, 0.25, 0.08],
+      "phase-soft": [660, 0.15, 0.06],
+      rest: [440, 0.3, 0.15],
+      done: [880, 0.4, 0.08], // will play a quick ascending pair
     };
 
     const cfg = configs[kind] ?? configs.phase;
     this._playTone(...cfg);
 
-    if (kind === 'done') {
+    if (kind === "done") {
       // Ascending pair: low then high
       setTimeout(() => this._playTone(1100, 0.4, 0.12), 100);
     }
@@ -208,14 +223,17 @@ export class CueEngine {
   _playTone(freq, gain, dur) {
     if (!this._audioCtx) return;
     try {
-      const osc   = this._audioCtx.createOscillator();
+      const osc = this._audioCtx.createOscillator();
       const gainN = this._audioCtx.createGain();
       osc.connect(gainN);
       gainN.connect(this._audioCtx.destination);
-      osc.type      = 'sine';
+      osc.type = "sine";
       osc.frequency.value = freq;
       gainN.gain.setValueAtTime(gain, this._audioCtx.currentTime);
-      gainN.gain.exponentialRampToValueAtTime(0.001, this._audioCtx.currentTime + dur);
+      gainN.gain.exponentialRampToValueAtTime(
+        0.001,
+        this._audioCtx.currentTime + dur,
+      );
       osc.start(this._audioCtx.currentTime);
       osc.stop(this._audioCtx.currentTime + dur + 0.01);
     } catch (e) {
