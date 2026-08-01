@@ -21,6 +21,7 @@ Open `http://localhost:8080`. The service worker caches all assets for offline u
 The app is a single-page multi-screen PWA. All state (routines, history, settings) lives in `localStorage` under the `ptimer_*` keys defined in `storage.js`.
 
 **Data flow:**
+
 1. `storage.js` — pure CRUD over localStorage; seeds preset routines on first run via `presets.js`
 2. `schedule.js` — pure function `buildSchedule(routine)` → flat ordered array of phase objects (no side effects, no DOM); also exports `findEndSetEarlyTarget` / `findSkipExerciseTarget` for jump navigation
 3. `engine.js` — `SessionEngine` consumes a schedule and drives a drift-corrected `setTimeout` tick loop at ~250ms; fires callbacks (`onPhaseStart`, `onTick`, `onDone`, `onEnd`); no DOM access
@@ -40,6 +41,6 @@ The SW uses a cache-first strategy (`ptimer-v1`). When adding new JS/CSS files, 
 `schedule.js` includes a `selfTest()` export. Run it in the browser console or Node:
 
 ```js
-import { selfTest } from './js/schedule.js';
+import { selfTest } from "./js/schedule.js";
 selfTest();
 ```

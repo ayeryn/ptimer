@@ -16,7 +16,7 @@ python3 -m http.server 8080
 Open `http://localhost:8080`. Use localhost (or HTTPS) so the service worker can register. For schedule changes, run `selfTest()` from the browser console after loading the app:
 
 ```js
-import('./js/schedule.js').then(({ selfTest }) => selfTest());
+import("./js/schedule.js").then(({ selfTest }) => selfTest());
 ```
 
 Manually verify routine editing, session playback, settings, history, and offline reloads for UI or persistence changes.
