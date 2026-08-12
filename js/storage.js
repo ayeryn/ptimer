@@ -106,6 +106,8 @@ export function seedIfNeeded() {
     "preset-single-side-tricep-extension",
     "preset-leg-kickback",
     "preset-bulgarian-squat",
+    "preset-glute-screen-break",
+    "preset-hip-glute-activation",
   ].forEach((id) => {
     if (routines.some((routine) => routine.id === id)) return;
     const preset = PRESET_ROUTINES.find((routine) => routine.id === id);
