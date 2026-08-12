@@ -47,7 +47,7 @@ export function buildSchedule(routine) {
         if (setIdx === 0) {
           phases.push({
             type: "get-ready",
-            duration: isFirstExercise && setIdx === 0 ? 10 : 2,
+            duration: isFirstExercise && setIdx === 0 ? 20 : 2,
             label: "GET READY",
             subLabel: exercise.name,
             setLabel,
