@@ -131,8 +131,8 @@ export const PRESET_ROUTINES = [
   {
     id: "preset-glute-screen-break",
     groupId: "group-lower-body",
-    name: "Glute Screen Break",
-    note: "<5 min • Foam roller + wall",
+    name: "Glute Activation",
+    note: "Foam roller + wall",
     repeat: 1,
     exercises: [
       {
