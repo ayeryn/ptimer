@@ -85,15 +85,19 @@ export class CueEngine {
         this._beep("ready");
         break;
 
-      case "rest": {
-        const restLabel =
-          label === "NEXT EXERCISE"
-            ? `Next: ${phase.subLabel}.${suffixLabel(phase.setLabel)}`
-            : "Rest.";
-        this._speak(restLabel);
+      case "rest":
+        if (label === "NEXT EXERCISE") {
+          this._speak("Next.");
+          if (phase.nextExerciseName) {
+            this._speak(
+              `${phase.nextExerciseName}.${suffixLabel(phase.setLabel)}`,
+            );
+          }
+        } else {
+          this._speak("Rest.");
+        }
         this._beep("rest");
         break;
-      }
 
       case "done":
         this._speak("Done. Great work!");

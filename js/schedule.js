@@ -129,6 +129,7 @@ export function buildSchedule(routine) {
           // A rest phase looks forward: its label belongs to the set it leads into.
           const nextExercise =
             routine.exercises[exIdx + 1] ?? routine.exercises[0];
+          const upcomingExercise = isLastSet ? nextExercise : exercise;
           phases.push({
             type: "rest",
             duration: exercise.rest,
@@ -146,6 +147,7 @@ export function buildSchedule(routine) {
             repIdx: null,
             cue: null,
             exerciseName: exercise.name,
+            nextExerciseName: upcomingExercise?.name ?? "",
           });
         }
       }
@@ -326,6 +328,15 @@ export function selfTest() {
   console.assert(
     JSON.stringify(restLabels) === JSON.stringify(["Right", "Left"]),
     `Rest labels should look forward: got ${JSON.stringify(restLabels)}`,
+  );
+
+  const restNextExerciseNames = sched
+    .filter((p) => p.type === "rest")
+    .map((p) => p.nextExerciseName);
+  console.assert(
+    JSON.stringify(restNextExerciseNames) ===
+      JSON.stringify(["Face Pulls", "Prone Cobra", "Prone Cobra"]),
+    `Rest phases should identify their upcoming exercise: got ${JSON.stringify(restNextExerciseNames)}`,
   );
 
   // Last real phase before 'done' should NOT be rest (last set of last exercise)

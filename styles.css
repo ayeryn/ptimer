@@ -607,6 +607,15 @@ button {
 .phase-rest .ring-fill {
   stroke: var(--phase-rest);
 }
+#screen-player.phase-next-exercise .player-arena {
+  flex: 0 0 180px;
+  min-height: 180px;
+  padding: 0.75rem 1rem;
+}
+#screen-player.phase-next-exercise .progress-ring {
+  width: min(172px, 48vw);
+  height: min(172px, 48vw);
+}
 .phase-hold .ring-fill {
   stroke: var(--phase-hold);
 }
@@ -689,6 +698,11 @@ button {
   font-weight: 700;
   text-align: center;
   padding: 0 1.5rem;
+}
+#screen-player.phase-next-exercise .exercise-name {
+  font-size: clamp(2rem, 8.5vw, 3.1rem);
+  line-height: 1.05;
+  padding: 0 1.25rem;
 }
 .exercise-cue {
   font-size: 0.9rem;

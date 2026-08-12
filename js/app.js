@@ -602,17 +602,22 @@ function renderPhase(phase, idx) {
   const cueEl = document.getElementById("player-exercise-cue");
 
   if (visual) {
+    const isNextExercise = phase.label === "NEXT EXERCISE";
     phaseEl.textContent = phase.label;
-    subEl.textContent = phase.subLabel ?? "";
-    setEl.textContent = phase.setLabel ?? "";
-    exEl.textContent = phase.exerciseName ?? "";
-    cueEl.textContent = phase.cue ?? "";
+    subEl.textContent = isNextExercise ? "" : (phase.subLabel ?? "");
+    setEl.textContent = isNextExercise ? "" : (phase.setLabel ?? "");
+    exEl.textContent = isNextExercise
+      ? (phase.nextExerciseName ?? "")
+      : (phase.exerciseName ?? "");
+    cueEl.textContent = isNextExercise ? "" : (phase.cue ?? "");
   }
 
   // Color coding for phase
   const playerEl = document.getElementById("screen-player");
   playerEl.className =
-    "screen active phase-" + (phase.type?.replace(":", "-") ?? "default");
+    "screen active phase-" +
+    (phase.type?.replace(":", "-") ?? "default") +
+    (phase.label === "NEXT EXERCISE" ? " phase-next-exercise" : "");
 }
 
 function updateCountdown(remaining, phase) {
