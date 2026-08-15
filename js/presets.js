@@ -62,6 +62,7 @@ export const PRESET_ROUTINES = [
     groupId: "group-lower-body",
     name: "RDLs",
     note: "Door-anchored band",
+    startCountdown: 15,
     repeat: 1,
     exercises: [
       {
@@ -132,6 +133,7 @@ export const PRESET_ROUTINES = [
     id: "preset-glute-screen-break",
     groupId: "group-lower-body",
     name: "Glute Activation",
+    startCountdown: 10,
     note: "Foam roller + wall",
     repeat: 1,
     exercises: [
@@ -373,24 +375,6 @@ export const PRESET_ROUTINES = [
         repTarget: [12, 15],
         tempo: { out: 2, hold: 2, return: 3 },
         rest: 40,
-        cue: null,
-      },
-    ],
-  },
-  {
-    id: "preset-prone-cobra",
-    name: "Prone Cobra",
-    note: "Isometric hold",
-    repeat: 1,
-    exercises: [
-      {
-        id: "ex-prone-cobra",
-        name: "Prone Cobra",
-        type: "hold",
-        load: null,
-        sets: 3,
-        holdDuration: 25,
-        rest: 30,
         cue: null,
       },
     ],

@@ -1,6 +1,6 @@
 // Service worker — offline cache for Posture Timer
 
-const CACHE_NAME = "ptimer-v32";
+const CACHE_NAME = "ptimer-v33";
 
 const ASSETS = [
   "./",

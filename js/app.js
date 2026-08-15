@@ -734,13 +734,11 @@ document
 document
   .getElementById("btn-skip-ex")
   .addEventListener("click", () => engine?.skipExercise());
-document
-  .getElementById("btn-skip-to-start")
-  .addEventListener("click", () => {
-    if (!engine?.restartInitialCountdown(SKIP_TO_START_SECONDS)) return;
-    startCountdownSkipped = true;
-    document.getElementById("btn-skip-to-start").classList.add("hidden");
-  });
+document.getElementById("btn-skip-to-start").addEventListener("click", () => {
+  if (!engine?.restartInitialCountdown(SKIP_TO_START_SECONDS)) return;
+  startCountdownSkipped = true;
+  document.getElementById("btn-skip-to-start").classList.add("hidden");
+});
 
 document.getElementById("btn-end-session").addEventListener("click", () => {
   if (confirm("End this session?")) {
@@ -801,7 +799,7 @@ function openEditor(routineId) {
       name: "",
       note: "",
       repeat: 1,
-      startCountdown: 20,
+      startCountdown: 15,
       groupId: null,
       exercises: [],
     };
@@ -815,7 +813,7 @@ function renderEditor() {
   document.getElementById("editor-note").value = editingRoutine.note ?? "";
   document.getElementById("editor-repeat").value = editingRoutine.repeat ?? 1;
   document.getElementById("editor-start-countdown").value =
-    editingRoutine.startCountdown ?? 20;
+    editingRoutine.startCountdown ?? 15;
 
   // Populate group dropdown
   const groupSelect = document.getElementById("editor-group");
@@ -903,7 +901,7 @@ function readRoutineStartCountdown() {
     document.getElementById("editor-start-countdown").value,
     10,
   );
-  return Number.isFinite(value) ? Math.min(120, Math.max(5, value)) : 20;
+  return Number.isFinite(value) ? Math.min(120, Math.max(5, value)) : 15;
 }
 
 document.getElementById("btn-save-routine").addEventListener("click", () => {

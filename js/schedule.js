@@ -29,13 +29,10 @@ function setLabelFor(exercise, setIdx) {
  */
 export function buildSchedule(routine) {
   const phases = [];
-  const requestedStartCountdown = Number.parseInt(
-    routine.startCountdown,
-    10,
-  );
+  const requestedStartCountdown = Number.parseInt(routine.startCountdown, 10);
   const startCountdown = Number.isFinite(requestedStartCountdown)
     ? Math.min(120, Math.max(5, requestedStartCountdown))
-    : 20;
+    : 15;
 
   // A single pass through exercises, honoring routine.repeat.
   const repeatCount = Math.max(1, routine.repeat ?? 1);
@@ -263,8 +260,8 @@ export function selfTest() {
   // Should start with get-ready
   console.assert(types[0] === "get-ready", "Should start with get-ready");
   console.assert(
-    sched[0].duration === 20,
-    `Expected missing start countdown to default to 20, got ${sched[0].duration}`,
+    sched[0].duration === 15,
+    `Expected missing start countdown to default to 15, got ${sched[0].duration}`,
   );
   const shortStartSchedule = buildSchedule({
     ...testRoutine,
