@@ -4,7 +4,7 @@
 //   { type, duration, label, subLabel, setLabel, exerciseIdx, setIdx, repIdx, cue, exerciseName }
 //
 // Phase types:
-//   'get-ready'   — 10s countdown before first set
+//   'get-ready'   — per-routine countdown before the first set
 //   'rep:out'     — outward phase of a rep
 //   'rep:hold'    — hold phase of a rep
 //   'rep:return'  — return phase of a rep
@@ -24,11 +24,18 @@ function setLabelFor(exercise, setIdx) {
 }
 
 /**
- * @param {Object} routine - Routine object
+ * @param {Object} routine - Routine object, optionally with startCountdown
  * @returns {Array} Flat ordered array of phase objects
  */
 export function buildSchedule(routine) {
   const phases = [];
+  const requestedStartCountdown = Number.parseInt(
+    routine.startCountdown,
+    10,
+  );
+  const startCountdown = Number.isFinite(requestedStartCountdown)
+    ? Math.min(120, Math.max(5, requestedStartCountdown))
+    : 20;
 
   // A single pass through exercises, honoring routine.repeat.
   const repeatCount = Math.max(1, routine.repeat ?? 1);
@@ -47,7 +54,7 @@ export function buildSchedule(routine) {
         if (setIdx === 0) {
           phases.push({
             type: "get-ready",
-            duration: isFirstExercise && setIdx === 0 ? 20 : 2,
+            duration: isFirstExercise && setIdx === 0 ? startCountdown : 2,
             label: "GET READY",
             subLabel: exercise.name,
             setLabel,
@@ -255,6 +262,18 @@ export function selfTest() {
 
   // Should start with get-ready
   console.assert(types[0] === "get-ready", "Should start with get-ready");
+  console.assert(
+    sched[0].duration === 20,
+    `Expected missing start countdown to default to 20, got ${sched[0].duration}`,
+  );
+  const shortStartSchedule = buildSchedule({
+    ...testRoutine,
+    startCountdown: 5,
+  });
+  console.assert(
+    shortStartSchedule[0].duration === 5,
+    `Expected per-routine start countdown to be 5, got ${shortStartSchedule[0].duration}`,
+  );
 
   // Should end with done
   console.assert(types[types.length - 1] === "done", "Should end with done");

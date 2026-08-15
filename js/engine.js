@@ -7,6 +7,7 @@
 //   engine.resume();
 //   engine.endSetEarly();
 //   engine.skipExercise();
+//   engine.restartInitialCountdown(5);
 //   engine.endSession();
 //
 // Callbacks fired by the engine:
@@ -75,6 +76,26 @@ export class SessionEngine {
     if (this._ended) return;
     const target = findSkipExerciseTarget(this._schedule, this._phaseIdx);
     this._jumpTo(target);
+  }
+
+  restartInitialCountdown(seconds) {
+    if (
+      this._ended ||
+      this._paused ||
+      this._phaseIdx !== 0 ||
+      this.currentPhase?.type !== "get-ready" ||
+      !Number.isFinite(seconds) ||
+      seconds <= 0
+    )
+      return false;
+
+    clearTimeout(this._tickHandle);
+    this.currentPhase.duration = seconds;
+    this._phaseStart = performance.now();
+    this._pausedElapsed = 0;
+    this._cb.onPhaseStart?.(this.currentPhase, this._phaseIdx, 0);
+    this._tick();
+    return true;
   }
 
   endSession() {

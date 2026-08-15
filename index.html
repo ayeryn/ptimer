@@ -103,6 +103,9 @@
         <button id="btn-pause" class="btn-primary">Pause</button>
         <button id="btn-end-set" class="btn-secondary">End Set Early</button>
         <button id="btn-skip-ex" class="btn-secondary">Skip Exercise</button>
+        <button id="btn-skip-to-start" class="btn-secondary hidden">
+          Skip to Start
+        </button>
         <button id="btn-end-session" class="btn-danger">End Session</button>
       </div>
 
@@ -151,6 +154,20 @@
         <div class="form-group">
           <label for="editor-repeat">Repeat whole routine</label>
           <input id="editor-repeat" type="number" min="1" max="10" value="1" />
+        </div>
+        <div class="form-group">
+          <label for="editor-start-countdown"
+            >Routine start countdown (seconds)</label
+          >
+          <input
+            id="editor-start-countdown"
+            type="number"
+            min="5"
+            max="120"
+            step="1"
+            value="20"
+            inputmode="numeric"
+          />
         </div>
         <div class="form-group">
           <label for="editor-group">Group</label>

@@ -506,14 +506,20 @@ document.getElementById("btn-settings").addEventListener("click", () => {
 
 // ── Session player ────────────────────────────────────────────────────────────
 
+// Seconds the initial get-ready is shortened to when "Skip to Start" is used;
+// also the minimum start countdown above which the button is worth showing.
+const SKIP_TO_START_SECONDS = 5;
+
 let activeSchedule = [];
 let activeRoutine = null;
+let startCountdownSkipped = false;
 
 async function startSession(routineId) {
   const routine = getRoutines().find((r) => r.id === routineId);
   if (!routine) return;
 
   activeRoutine = routine;
+  startCountdownSkipped = false;
   activeSchedule = buildSchedule(routine);
 
   // Unlock audio on this gesture
@@ -536,6 +542,7 @@ async function startSession(routineId) {
     onPhaseStart: (phase, idx) => {
       cueEngine.onPhaseStart(phase);
       renderPhase(phase, idx);
+      syncSkipToStartButton(phase, idx);
       startWorkoutClock(phase);
     },
     onTick: (remaining, phase, idx) => {
@@ -590,6 +597,18 @@ function resetPlayerUI() {
   setRingProgress(0);
   resetWorkoutClock();
   hideDoneOverlay();
+}
+
+function syncSkipToStartButton(phase, idx) {
+  const button = document.getElementById("btn-skip-to-start");
+  if (!button) return;
+  const shouldShow =
+    !startCountdownSkipped &&
+    !engine?.isPaused &&
+    idx === 0 &&
+    phase.type === "get-ready" &&
+    phase.duration > SKIP_TO_START_SECONDS;
+  button.classList.toggle("hidden", !shouldShow);
 }
 
 function renderPhase(phase, idx) {
@@ -693,10 +712,12 @@ document.getElementById("btn-pause").addEventListener("click", () => {
     }
     workoutPauseMs = null;
     document.getElementById("btn-pause").textContent = "Pause";
+    syncSkipToStartButton(engine.currentPhase, engine.phaseIdx);
   } else {
     engine.pause();
     workoutPauseMs = performance.now();
     document.getElementById("btn-pause").textContent = "Resume";
+    syncSkipToStartButton(engine.currentPhase, engine.phaseIdx);
   }
 });
 
@@ -713,6 +734,13 @@ document
 document
   .getElementById("btn-skip-ex")
   .addEventListener("click", () => engine?.skipExercise());
+document
+  .getElementById("btn-skip-to-start")
+  .addEventListener("click", () => {
+    if (!engine?.restartInitialCountdown(SKIP_TO_START_SECONDS)) return;
+    startCountdownSkipped = true;
+    document.getElementById("btn-skip-to-start").classList.add("hidden");
+  });
 
 document.getElementById("btn-end-session").addEventListener("click", () => {
   if (confirm("End this session?")) {
@@ -773,6 +801,7 @@ function openEditor(routineId) {
       name: "",
       note: "",
       repeat: 1,
+      startCountdown: 20,
       groupId: null,
       exercises: [],
     };
@@ -785,6 +814,8 @@ function renderEditor() {
   document.getElementById("editor-name").value = editingRoutine.name;
   document.getElementById("editor-note").value = editingRoutine.note ?? "";
   document.getElementById("editor-repeat").value = editingRoutine.repeat ?? 1;
+  document.getElementById("editor-start-countdown").value =
+    editingRoutine.startCountdown ?? 20;
 
   // Populate group dropdown
   const groupSelect = document.getElementById("editor-group");
@@ -867,12 +898,21 @@ document.getElementById("btn-add-exercise").addEventListener("click", () => {
   openExerciseEditor(null);
 });
 
+function readRoutineStartCountdown() {
+  const value = Number.parseInt(
+    document.getElementById("editor-start-countdown").value,
+    10,
+  );
+  return Number.isFinite(value) ? Math.min(120, Math.max(5, value)) : 20;
+}
+
 document.getElementById("btn-save-routine").addEventListener("click", () => {
   editingRoutine.name =
     document.getElementById("editor-name").value.trim() || "Untitled";
   editingRoutine.note = document.getElementById("editor-note").value.trim();
   editingRoutine.repeat =
     parseInt(document.getElementById("editor-repeat").value) || 1;
+  editingRoutine.startCountdown = readRoutineStartCountdown();
   editingRoutine.groupId =
     document.getElementById("editor-group").value || null;
   saveRoutine(editingRoutine);
@@ -896,6 +936,7 @@ function syncEditorFields() {
   editingRoutine.note = document.getElementById("editor-note").value.trim();
   editingRoutine.repeat =
     parseInt(document.getElementById("editor-repeat").value) || 1;
+  editingRoutine.startCountdown = readRoutineStartCountdown();
   editingRoutine.groupId =
     document.getElementById("editor-group").value || null;
 }
