@@ -100,21 +100,13 @@ export function seedIfNeeded() {
     }
   }
 
-  // Add newly introduced built-in routines without changing existing routines.
-  [
-    "preset-tricep-pulldown",
-    "preset-single-side-tricep-extension",
-    "preset-leg-kickback",
-    "preset-bulgarian-squat",
-    "preset-glute-screen-break",
-    "preset-hip-glute-activation",
-  ].forEach((id) => {
-    if (routines.some((routine) => routine.id === id)) return;
-    const preset = PRESET_ROUTINES.find((routine) => routine.id === id);
-    if (preset) {
-      routines.push(preset);
-      updated = true;
-    }
+  // Add any built-in routine missing from storage, without touching existing
+  // routines. General merge — new presets appear for existing users
+  // automatically, no per-id list to maintain.
+  PRESET_ROUTINES.forEach((preset) => {
+    if (routines.some((routine) => routine.id === preset.id)) return;
+    routines.push(preset);
+    updated = true;
   });
 
   // Upgrade the original single-side preset so both arms receive timed sets.
