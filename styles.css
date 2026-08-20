@@ -987,9 +987,20 @@ input[type="checkbox"] {
   width: 100%;
   order: 3;
 }
+.btn-ex-pin,
+.btn-ex-edit,
+.btn-ex-up,
+.btn-ex-down,
+.btn-ex-del {
+  align-items: center;
+  display: inline-flex;
+  height: 2rem;
+  justify-content: center;
+  padding: 0;
+  width: 2rem;
+}
 .btn-ex-pin {
   font-size: 1rem;
-  padding: 0.2rem 0.5rem;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   background: transparent;
@@ -1008,9 +1019,8 @@ input[type="checkbox"] {
 }
 .btn-ex-edit {
   color: var(--accent-2);
-  font-size: 0.9rem;
+  font-size: 1rem;
   font-weight: 600;
-  padding: 0.3rem 0.6rem;
   border: 1px solid var(--accent-2);
   border-radius: var(--radius-sm);
 }
@@ -1018,16 +1028,37 @@ input[type="checkbox"] {
 .btn-ex-down {
   font-size: 1rem;
   color: var(--text-muted);
-  padding: 0.2rem 0.5rem;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
 }
 .btn-ex-del {
   font-size: 1rem;
   color: var(--danger);
-  padding: 0.2rem 0.5rem;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
+}
+
+@media (max-width: 480px) {
+  .editor-ex-item {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+  .editor-ex-item .ex-name {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+  .editor-ex-item .btn-ex-pin,
+  .editor-ex-item .btn-ex-edit,
+  .editor-ex-item .btn-ex-up,
+  .editor-ex-item .btn-ex-down,
+  .editor-ex-item .btn-ex-del {
+    grid-row: 2;
+    width: 100%;
+  }
+  .editor-ex-item .ex-meta {
+    grid-column: 1 / -1;
+    grid-row: 3;
+  }
 }
 
 /* ── History list ──────────────────────────────────────────────────────────── */

@@ -836,7 +836,7 @@ function renderEditor() {
       <button class="btn-ex-pin${ex.pinned ? " pinned" : ""}" data-idx="${i}" aria-label="Pin exercise">📌</button>
       <span class="ex-name">${esc(ex.name || "Unnamed")}</span>
       <span class="ex-meta">${exSummary(ex)}</span>
-      <button class="btn-ex-edit" data-idx="${i}">Edit</button>
+      <button class="btn-ex-edit" data-idx="${i}" aria-label="Edit ${esc(ex.name || "Unnamed")}">✏️</button>
       <button class="btn-ex-up"   data-idx="${i}" ${i === 0 ? "disabled" : ""}>↑</button>
       <button class="btn-ex-down" data-idx="${i}" ${i === editingRoutine.exercises.length - 1 ? "disabled" : ""}>↓</button>
       <button class="btn-ex-del"  data-idx="${i}">✕</button>
