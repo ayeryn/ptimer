@@ -79,9 +79,7 @@ export function buildSchedule(routine) {
           });
         } else {
           // ── Rep-based ───────────────────────────────────────────────────
-          const repTarget = Array.isArray(exercise.repTarget)
-            ? exercise.repTarget[1] // use upper bound for scheduling
-            : exercise.repTarget;
+          const repTarget = exercise.repTarget;
 
           for (let repIdx = 0; repIdx < repTarget; repIdx++) {
             phases.push({
@@ -235,7 +233,7 @@ export function selfTest() {
         name: "Face Pulls",
         type: "reps",
         sets: 2,
-        repTarget: [3, 3],
+        repTarget: 3,
         tempo: { out: 2, hold: 1, return: 3 },
         rest: 10,
         cue: null,
@@ -294,7 +292,7 @@ export function selfTest() {
       {
         ...testRoutine.exercises[0],
         sets: 1,
-        repTarget: [1, 1],
+        repTarget: 1,
         tempo: { out: 2, hold: 0, return: 3 },
       },
     ],

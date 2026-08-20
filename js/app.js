@@ -197,9 +197,7 @@ function estimateDuration(routine) {
     if (ex.type === "hold") {
       secs += ex.sets * ex.holdDuration;
     } else {
-      const repTarget = Array.isArray(ex.repTarget)
-        ? ex.repTarget[1]
-        : ex.repTarget;
+      const repTarget = ex.repTarget;
       const perRep =
         (ex.tempo?.out ?? 2) + (ex.tempo?.hold ?? 1) + (ex.tempo?.return ?? 3);
       secs += ex.sets * repTarget * perRep;
@@ -854,9 +852,7 @@ function exSummary(ex) {
   if (ex.type === "hold") {
     return `Hold · ${ex.sets}×${ex.holdDuration}s${labels}`;
   }
-  const rep = Array.isArray(ex.repTarget)
-    ? ex.repTarget.join("–")
-    : ex.repTarget;
+  const rep = ex.repTarget;
   return `${ex.sets}×${rep} reps · ${ex.tempo?.out}/${ex.tempo?.hold}/${ex.tempo?.return}${labels}`;
 }
 
@@ -952,7 +948,7 @@ function openExerciseEditor(exIdx) {
       type: "reps",
       load: "",
       sets: 3,
-      repTarget: [12, 15],
+      repTarget: 15,
       tempo: { out: 2, hold: 2, return: 3 },
       rest: 40,
       holdDuration: 20,
@@ -980,11 +976,7 @@ function populateExEditor(ex) {
   document.getElementById("ex-type-hold").checked = !isReps;
 
   // Rep fields
-  const rt = Array.isArray(ex.repTarget)
-    ? ex.repTarget
-    : [ex.repTarget, ex.repTarget];
-  document.getElementById("ex-rep-min").value = rt[0];
-  document.getElementById("ex-rep-max").value = rt[1];
+  document.getElementById("ex-rep-target").value = ex.repTarget;
   document.getElementById("ex-tempo-out").value = ex.tempo?.out ?? 2;
   document.getElementById("ex-tempo-hold").value = ex.tempo?.hold ?? 2;
   document.getElementById("ex-tempo-return").value = ex.tempo?.return ?? 3;
@@ -1100,10 +1092,7 @@ document.getElementById("btn-save-exercise").addEventListener("click", () => {
         ? !!editingRoutine.exercises[editingExIdx]?.pinned
         : false,
     // reps
-    repTarget: [
-      parseInt(document.getElementById("ex-rep-min").value) || 12,
-      parseInt(document.getElementById("ex-rep-max").value) || 15,
-    ],
+    repTarget: parseInt(document.getElementById("ex-rep-target").value) || 15,
     tempo: {
       out: Number.isFinite(tempoOut) ? tempoOut : 2,
       hold: Number.isFinite(tempoHold) ? tempoHold : 2,

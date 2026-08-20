@@ -57,6 +57,15 @@ export function seedIfNeeded() {
   const groupIds = new Set(getGroups().map((group) => group.id));
   let updated = false;
 
+  // Rep ranges historically scheduled their upper bound; store that scalar instead.
+  routines.forEach((routine) => {
+    (routine.exercises ?? []).forEach((exercise) => {
+      if (!Array.isArray(exercise.repTarget)) return;
+      exercise.repTarget = exercise.repTarget[1];
+      updated = true;
+    });
+  });
+
   routines.forEach((r) => {
     const preset = PRESET_ROUTINES.find((pr) => pr.id === r.id);
     if (
